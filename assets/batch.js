@@ -34,9 +34,9 @@ function renderSuffixes(){
 function scheduleSuffixRender(){cancelAnimationFrame(suffixRenderFrame);suffixRenderFrame=requestAnimationFrame(renderSuffixes)}
 suffixSearch.addEventListener('input',scheduleSuffixRender);$('suffixCommon').onclick=()=>{selectedTlds=new Set(['com','net','org','cn','io','ai','co','me','app','dev']);renderSuffixes();updateSuffixStatus()};$('suffixClear').onclick=()=>{selectedTlds.clear();renderSuffixes();updateSuffixStatus()};
 const batchCopy={
- zh:['全部状态','停止查询','重试未完成','导出 CSV','复制当前域名','待查询','查询中','查无注册记录','注册商','到期时间','输入名称时请先选择后缀。','仅查询前 50 个域名','无匹配结果'],
- 'zh-Hant':['全部狀態','停止查詢','重試未完成','匯出 CSV','複製目前網域','待查詢','查詢中','查無註冊記錄','註冊商','到期時間','輸入名稱時請先選擇後綴。','僅查詢前 50 個網域','無相符結果'],
- en:['All statuses','Stop lookup','Retry unfinished','Export CSV','Copy shown domains','Queued','Looking up','No registration record','Registrar','Expiration','Select a suffix to look up a bare name.','Only the first 50 domains will be queried','No matching results']
+ zh:['全部状态','停止查询','重试未完成','导出 CSV','复制当前域名','待查询','查询中','未注册','注册商','到期时间','输入名称时请先选择后缀。','仅查询前 50 个域名','无匹配结果'],
+ 'zh-Hant':['全部狀態','停止查詢','重試未完成','匯出 CSV','複製目前網域','待查詢','查詢中','未註冊','註冊商','到期時間','輸入名稱時請先選擇後綴。','僅查詢前 50 個網域','無相符結果'],
+ en:['All statuses','Stop lookup','Retry unfinished','Export CSV','Copy shown domains','Queued','Looking up','Unregistered','Registrar','Expiration','Select a suffix to look up a bare name.','Only the first 50 domains will be queried','No matching results']
 };
 const ui=i=>(batchCopy[lang]||batchCopy.en)[i];
 let batchRows=[], active=null;
@@ -54,7 +54,10 @@ submit.parentElement.before(plan);
 const preview=document.createElement('p');
 preview.className='batch-preview';
 preview.setAttribute('aria-live','polite');
-list.before(toolbar,preview);
+const stats=document.createElement('div');
+stats.className='batch-stats';
+const meter=document.createElement('progress');meter.className='batch-meter';meter.max=1;meter.value=0;meter.setAttribute('aria-label','Lookup progress');
+list.before(meter,stats,toolbar,preview);
 progress.setAttribute('aria-live','polite');
 
 function buildDomains(){
@@ -113,7 +116,12 @@ function controls(){
  const hasResults=shown().some(r=>r.state!=='invalid');
  csv.disabled=copy.disabled=!hasResults;
  const valid=batchRows.filter(r=>r.state!=='invalid');
- progress.textContent=valid.filter(r=>r.state!=='queued'&&r.state!=='loading').length+' / '+valid.length;
+ const done=valid.filter(r=>r.state!=='queued'&&r.state!=='loading').length;
+ progress.textContent=done+' / '+valid.length;
+ meter.max=valid.length||1;meter.value=done;
+ const titles=lang==='zh'?['全部','已注册','未注册','其他']:lang==='zh-Hant'?['全部','已註冊','未註冊','其他']:['Total','Registered','Unregistered','Other'];
+ const counts=[valid.length,valid.filter(r=>r.state==='registered').length,valid.filter(r=>r.state==='available').length,valid.filter(r=>!['registered','available','queued','loading'].includes(r.state)).length];
+ stats.replaceChildren(...titles.map((title,i)=>{const b=document.createElement('button');b.type='button';b.className='batch-stat stat-'+i;const n=document.createElement('strong');n.textContent=counts[i];const l=document.createElement('span');l.textContent=title;b.append(l,n);if(i===3){b.disabled=true}else{const target=['','registered','available'][i];b.setAttribute('aria-pressed',String(filter.value===target));b.onclick=()=>{if(target&&!states.includes(target))filter.add(new Option(label(target),target));filter.value=target;controls()}}return b}));
  batchRows.forEach(paintRow);
 }
 

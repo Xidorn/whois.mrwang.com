@@ -25,9 +25,12 @@ window.WhoisLookup = (() => {
   function state(d) {
     if (d.reserved === true) return 'reserved';
     if (d.rateLimited === true) return 'rateLimited';
-    if (d.unknown === true) return 'unknown';
     if (d.registered === true) return 'registered';
-    if (d.registered === false) return 'available';
+    const raw=typeof d.whoisData==='string'?d.whoisData:'';
+    const rdap=object(d.rdapData)?d.rdapData:null;
+    if (d.registered === false && d.unknown !== true) return 'available';
+    if (/^(?:no match(?: for.*)?|not found|no registration record|domain not found|no data found|查无注册记录|查無註冊記錄|未找到注册记录)[.!。]?$/im.test(raw.trim()) || /^no match for [^\r\n]+/im.test(raw) || Number(rdap?.errorCode)===404) return 'available';
+    if (d.unknown === true) return 'unknown';
     return 'unknown';
   }
 
