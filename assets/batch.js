@@ -126,22 +126,16 @@ function controls(){
 }
 
 function rowFor(domain,state){
- const row=document.createElement('div');
+ const row=document.createElement(state==='invalid'?'div':'a');
  row.className='batch-row';
+ if(state!=='invalid'){row.href=searchUrl(domain);row.setAttribute('aria-label',domain);}
  const name=document.createElement('span'),status=document.createElement('span'),detail=document.createElement('small');
  name.className='batch-domain';
  name.textContent=domain;
  detail.className='batch-row-detail';
  name.append(detail);
  row.append(name,status);
- if(state!=='invalid'){
-  const open=document.createElement('a');
-  open.className='batch-open';
-  open.href=searchUrl(domain);
-  open.setAttribute('aria-label',domain);
-  open.textContent='→';
-  row.append(open);
- }
+
  return {domain,row,status,detail,state};
 }
 

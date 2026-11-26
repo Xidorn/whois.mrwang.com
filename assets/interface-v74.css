@@ -32,3 +32,16 @@ main.wrap{padding-top:28px}.search-strip{margin-bottom:22px}
 @media(max-width:760px){main.hero{padding-top:60px!important}main.wrap{padding-top:18px}.lookup-desk{padding-inline:14px}.desk-tabs{gap:14px}#content .domain-line>#priceWidget:not([hidden]){display:none!important}#content .metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important;padding:4px 12px!important}#content #metrics .metric{border:0!important;padding:12px!important}#content .domain-identity{align-items:flex-start}#content .domain-summary{gap:6px}#content .domain-identity .share-link{width:34px;height:34px;flex-basis:34px}.batch-input-grid{grid-template-columns:1fr;gap:18px}.suffix-panel{padding:18px 0 0}.batch-card textarea{min-height:175px}.batch-stat{padding:12px 8px}.batch-stat strong{font-size:21px}.batch-body .batch-page{padding-top:24px}}
 @media(max-width:360px){.batch-stat:nth-child(3){border-inline-start:0}.batch-stat:nth-child(n+3){border-top:1px solid var(--line)}}
 @media(prefers-reduced-motion:reduce){#content .domain-head::before,.batch-results::before{animation:none!important}}
+
+/* v75: native full-row links, no separate arrow column. */
+.batch-body #batchResultList .batch-row{grid-template-columns:minmax(0,1fr) minmax(0,auto);gap:16px;padding:13px 18px;min-height:64px;text-decoration:none;color:inherit;transition:background-color .16s ease}
+.batch-body #batchResultList .batch-row[hidden]{display:none}
+.batch-body #batchResultList .batch-state{grid-column:2;grid-row:1;justify-self:end;text-align:end}
+.batch-body #batchResultList a.batch-row{cursor:pointer}
+.batch-body #batchResultList a.batch-row:hover,.batch-body #batchResultList a.batch-row:focus-visible{background:color-mix(in srgb,var(--accent) 7%,var(--sheet))}
+.batch-body #batchResultList a.batch-row:hover .batch-domain,.batch-body #batchResultList a.batch-row:focus-visible .batch-domain{color:var(--accent)}
+.batch-body #batchResultList a.batch-row:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
+.batch-body #batchResultList div.batch-row:hover{background:transparent}
+@media(max-width:760px){.batch-body #batchResultList .batch-row{gap:10px;padding:12px;min-height:56px}}
+@media(max-width:360px){.batch-body #batchResultList .batch-row{gap:8px;padding:10px}.batch-body #batchResultList .batch-state{max-width:90px}}
+@media(prefers-reduced-motion:reduce){.batch-body #batchResultList .batch-row{transition:none}}
