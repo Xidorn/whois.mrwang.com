@@ -51,7 +51,7 @@ async function fetchJSON(url,signal){const res=await fetch(url,{signal,headers:{
 function extractRates(j){const d=j?.data??j;let items=[];if(Array.isArray(d))items=d;else if(Array.isArray(d?.currencies))items=d.currencies;else if(Array.isArray(d?.list))items=d.list;else if(d&&typeof d==='object')items=Object.entries(d).map(([k,v])=>v&&typeof v==='object'?{currency:k,...v}:{currency:k,rate_cny:v});const r={CNY:1};for(const v of items){const c=String(v?.currency||v?.code||v?.currency_code||'').toUpperCase(),n=Number(v?.rate_cny??v?.rateCny);if(/^[A-Z]{3}$/.test(c)&&n>0&&Number.isFinite(n))r[c]=n}return r}
 const currencies=['USD','CNY','EUR','GBP','JPY','CAD','AUD','HKD','SGD','INR','KRW','BRL','IDR'];
 let currencyChoice='';
-try{const saved=localStorage.getItem('whoisPriceCurrency');if(currencies.includes(saved))currencyChoice=saved}catch{}
+try{const saved=localStorage.getItem('whoisPriceCurrency');if(/^[A-Z]{3}$/.test(saved))currencyChoice=saved}catch{}
 const quoteCache=new Map();
 let rateCache=null,priceError=false;
 function cachedQuote(key){
@@ -74,8 +74,15 @@ for(const select of [currencySelect,mobileCurrencySelect]){
   paint();requestShownOffers();
  };
 }
-widget.prepend(currencySelect);
-mobileRail?.before(mobileCurrencySelect);
+function currencyField(select){
+ const field=document.createElement('label');
+ field.className='currency-field';
+ const caption=document.createElement('span');
+ field.append(caption,select);
+ return field;
+}
+widget.prepend(currencyField(currencySelect));
+mobileRail?.before(currencyField(mobileCurrencySelect));
 const retryPrice=document.createElement('button');
 retryPrice.type='button';
 retryPrice.className='export-action';
@@ -91,10 +98,24 @@ function preferredCurrency(){
  return options.includes(p)?p:options.includes('USD')?'USD':options[0]||'CNY';
 }
 function syncCurrency(select){
- const label=language()==='zh'?'报价币种':language()==='zh-Hant'?'報價幣別':'Quote currency';
- select.setAttribute('aria-label',label);
- select.replaceChildren(new Option(label,''),...currencyOptions().map(c=>new Option(c,c)));
- select.value=currencyOptions().includes(currencyChoice)?currencyChoice:'';
+ const locale=language();
+ const labels={en:'Quote currency',zh:'报价币种','zh-Hant':'報價幣別',de:'Währung',fr:'Devise',ja:'表示通貨',es:'Moneda',pt:'Moeda',it:'Valuta',ko:'표시 통화',ru:'Валюта',ar:'العملة',hi:'मुद्रा',id:'Mata uang'};
+ const automatic={en:'Automatic',zh:'自动','zh-Hant':'自動',de:'Automatisch',fr:'Automatique',ja:'自動',es:'Automático',pt:'Automático',it:'Automatica',ko:'자동',ru:'Автоматически',ar:'تلقائي',hi:'स्वचालित',id:'Otomatis'};
+ const options=currencyOptions();
+ const auto=[LC[locale],'USD',...options].find(code=>options.includes(code))||'CNY';
+ const signature=[locale,auto,...options].join('|');
+ if(select.dataset.options!==signature){
+  select.dataset.options=signature;
+  select.previousElementSibling.textContent=labels[locale]||labels.en;
+  let names;
+  try{names=new Intl.DisplayNames([locale],{type:'currency'})}catch{}
+  const items=options.map(code=>{
+   const name=names?.of(code);
+   return new Option(name&&name!==code?code+' · '+name:code,code);
+  });
+  select.replaceChildren(new Option((automatic[locale]||automatic.en)+' · '+auto,''),...items);
+ }
+ select.value=options.includes(currencyChoice)?currencyChoice:'';
 }
 
 function convert(row,op,currency){const original=finite(row?.[op]),cny=finite(row?.[op+'_cny']),native=String(row?.currency||'').toUpperCase();if(original===null&&cny===null)return null;if(currency===native&&original!==null)return original;if(currency==='CNY'&&cny!==null)return cny;if(cny!==null&&rates[currency]>0)return cny/rates[currency];return null}
