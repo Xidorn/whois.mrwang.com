@@ -7,12 +7,14 @@
 #content .raw{--ring-speed:10s;--ring-delay:-6s}
 .lookup-desk,.batch-body .batch-card{--ring-speed:10s;--ring-delay:-2s}
 .batch-body .batch-results{--ring-speed:7s;--ring-delay:-4s}
+@media (hover:hover) and (pointer:fine){
 @supports (background:conic-gradient(from 0deg,red,blue)){
- #content .domain-head,#content .record-flow,#content .raw,.lookup-desk,.batch-body .batch-card,.batch-body .batch-results{
+ #content .domain-head:hover,#content .record-flow:hover,#content .raw:hover,.lookup-desk:hover,.batch-body .batch-card:hover,.batch-body .batch-results:hover{
  border-color:transparent!important;
  background:linear-gradient(var(--sheet),var(--sheet)) padding-box,conic-gradient(from var(--result-angle),var(--line) 0%,var(--line) 12%,var(--ring-strength,var(--accent)) 25%,var(--status) 34%,var(--line) 52%,var(--line) 76%,var(--accent) 92%,var(--line)) border-box;
  animation:result-edge var(--ring-speed,9s) linear infinite;animation-delay:var(--ring-delay,0s)
  }
+}
 }
 /* Retire the old competing batch overlay. Native focus remains intact. */
 .batch-body .batch-results::before,.batch-body .batch-results::after{content:none!important;display:none!important;animation:none!important}

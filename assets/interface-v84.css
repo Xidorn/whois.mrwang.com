@@ -35,3 +35,8 @@
 @media(hover:hover) and (pointer:fine){#content .raw summary:hover .raw-title{color:var(--accent)}#content .raw .copy:hover{background:var(--wash)}}
 @media(max-width:760px){#content .raw summary{min-height:54px;font-size:13px;gap:9px}.raw-symbol{width:30px;height:30px}.raw-view{border-radius:9px;margin-bottom:12px}#content .raw .raw-tools{padding:5px 10px}#content .raw .copy{min-height:44px}#content .raw .code{font-size:12px;line-height:1.75;padding:12px;max-height:min(55vh,440px)}}
 @media(prefers-reduced-motion:reduce){#searchForm,.raw-chevron{transition:none}}
+
+/* V85: perimeter animation only on genuine mouse hover. */
+@media (prefers-reduced-motion:reduce){
+ #content .domain-head,#content .record-flow,#content .raw,.lookup-desk,.batch-body .batch-card,.batch-body .batch-results{background:var(--sheet);border-color:var(--line)!important;animation:none!important}
+}

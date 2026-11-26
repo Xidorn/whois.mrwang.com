@@ -40,6 +40,14 @@
  function syncFont(){const current=document.documentElement.dataset.fontSize||'medium';$$('#fontSizeOptions button').forEach(b=>{const active=b.dataset.fontSize===current;b.classList.toggle('is-current',active);b.setAttribute('aria-pressed',String(active))})}
  function bindFontOnce(){$$('#fontSizeOptions button').forEach(b=>{if(b.dataset.bound)return;b.dataset.bound='1';b.addEventListener('click',()=>{const size=b.dataset.fontSize;if(!['small','medium','large'].includes(size))return;document.documentElement.dataset.fontSize=size;try{localStorage.setItem('whoisFontSize',size)}catch{};syncFont()})})}
  function syncLabels(){const t=text();$$('[data-nav-label]').forEach(el=>{const k=el.dataset.navLabel;if(t[k])el.textContent=t[k]});$('#displayTitle')&&($('#displayTitle').textContent=t.display);$('#themeSettingLabel')&&($('#themeSettingLabel').textContent=t.theme);$('#fontSettingLabel')&&($('#fontSettingLabel').textContent=t.font);$$('.popover-close,.choice-close').forEach(b=>{b.title=t.close;b.setAttribute('aria-label',t.close)})}
+ function mountDisplayReset(){
+  const panel=$('#choice-display-panel');if(!panel||$('#displayReset'))return;
+  const footer=document.createElement('div');footer.className='display-footer';
+  const b=document.createElement('button');b.type='button';b.id='displayReset';b.innerHTML='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 1 2.6 6.4M3 12V5m0 7h7"/></svg><span></span>';footer.append(b);panel.append(footer);
+  const sync=()=>{b.querySelector('span').textContent=window.WhoisTimezone?.resetLabel?.()||({zh:'恢复默认','zh-Hant':'恢復預設'}[lang()]||'Reset');b.disabled=(document.documentElement.dataset.theme||'paper')==='paper'&&(document.documentElement.dataset.fontSize||'medium')==='medium'&&(window.WhoisTimezone?.preference?.()||'auto')==='auto'};
+  b.addEventListener('click',()=>{window.applyWhoisTheme?.('paper',{persist:false});document.documentElement.dataset.fontSize='medium';try{localStorage.removeItem('whoisTheme');localStorage.removeItem('whoisFontSize')}catch{}window.WhoisTimezone?.reset?.();syncAll();sync()});
+  new MutationObserver(sync).observe(document.documentElement,{attributes:true,attributeFilter:['lang','data-theme','data-font-size']});window.addEventListener('whois-timezone-change',sync);sync();
+ }
  function syncAll(){syncLabels();syncThemeState();syncLanguageState();syncFont();window.updateLibraryCounts?.()}
  // Bind the four primary Menu controls first. A rendering error in one optional panel must never disable navigation.
  popItems.forEach(n=>{$('.nav-button',n)?.addEventListener('click',()=>{try{window.refreshLocalLibraryUI?.()}catch(e){console.warn('Library menu refresh failed',e)}toggle(n,'.nav-popover','.nav-button')});$('.popover-close',n)?.addEventListener('click',()=>{closeAll();$('.nav-button',n)?.focus()})});
@@ -47,8 +55,8 @@
  try{buildThemesOnce()}catch(e){console.error('Theme menu init failed',e)}
  try{buildLanguagesOnce()}catch(e){console.error('Language menu init failed',e)}
  try{bindFontOnce()}catch(e){console.error('Font menu init failed',e)}
- try{syncAll()}catch(e){console.error('Menu state sync failed',e)}
+ try{if(document.readyState==='loading'||document.readyState==='interactive')document.addEventListener('DOMContentLoaded',mountDisplayReset,{once:true});else mountDisplayReset();syncAll()}catch(e){console.error('Menu state sync failed',e)}
  document.addEventListener('pointerdown',e=>{if(!e.target.closest('.nav-popover-item,.nav-choice'))closeAll()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAll()});
  $('#langSelect')?.addEventListener('change',()=>queueMicrotask(syncAll));window.addEventListener('whois:themechange',syncThemeState);window.addEventListener('whois:librarychange',()=>queueMicrotask(()=>window.updateLibraryCounts?.()));
- window.addEventListener('storage',e=>{if(e.key==='whoisTheme'){window.applyWhoisTheme?.(e.newValue||'paper',{persist:false});syncThemeState()}else if(e.key==='whoisFontSize'){const s=e.newValue;if(['small','medium','large'].includes(s)){document.documentElement.dataset.fontSize=s;syncFont()}}else if(e.key==='whoisLang'||e.key===HISTORY_KEY||e.key===FAVORITES_KEY||e.key===null)queueMicrotask(syncAll)});
+ window.addEventListener('storage',e=>{if(e.key==='whoisTheme'){window.applyWhoisTheme?.(e.newValue||'paper',{persist:false});syncThemeState()}else if(e.key==='whoisFontSize'){const s=e.newValue||'medium';if(['small','medium','large'].includes(s)){document.documentElement.dataset.fontSize=s;syncFont()}}else if(e.key==='whoisLang'||e.key===HISTORY_KEY||e.key===FAVORITES_KEY||e.key===null)queueMicrotask(syncAll)});
 })();
