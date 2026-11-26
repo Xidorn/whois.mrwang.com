@@ -98,13 +98,7 @@ function syncCurrency(select){
  if(select.dataset.options!==signature){
   select.dataset.options=signature;
   select.setAttribute('aria-label',labels[locale]||labels.en);
-  const symbols={USD:'$',CNY:'¥',JPY:'JP¥',EUR:'€',GBP:'£',CAD:'CA$',AUD:'A$',HKD:'HK$',SGD:'S$',NZD:'NZ$',KRW:'₩',AED:'د.إ',NGN:'₦',BAM:'KM',GEL:'₾',RUB:'₽',INR:'₹',BRL:'R$',IDR:'Rp'};
-  const items=options.map(code=>{
-   const symbol=symbols[code]||new Intl.NumberFormat(locale,{style:'currency',currency:code,currencyDisplay:'narrowSymbol'}).formatToParts(0).find(part=>part.type==='currency')?.value||code;
-   const item=new Option(symbol,code);
-   item.setAttribute('aria-label',code+' '+symbol);
-   return item;
-  });
+  const items=options.map(code=>new Option(code,code));
   select.replaceChildren(...items);
  }
  select.value=preferredCurrency();

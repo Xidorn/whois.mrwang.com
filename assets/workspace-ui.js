@@ -17,9 +17,15 @@
     }
     function showDomains() {
       const saved = selected === 'saved';
-      const domains = saved ? getFavorites().slice(0, 6) : readHistory();
+      const history = readHistory();
+      const favorites = getFavorites();
+      const domains = saved ? favorites.slice(0, 6) : history;
       for (const button of buttons) {
-        button.textContent = button.dataset.desk === 'history' ? htxt('history') : xt(6);
+        const isHistory = button.dataset.desk === 'history';
+        const count = document.createElement('span');
+        count.className = 'desk-count';
+        count.textContent = String(isHistory ? history.length : favorites.length);
+        button.replaceChildren(isHistory ? htxt('history') : xt(6), ' ', count);
         button.setAttribute('aria-pressed', String(button.dataset.desk === selected));
       }
       batch.textContent = document.querySelector('#batchNav [data-nav-label]').textContent + ' ↗';
