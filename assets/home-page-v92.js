@@ -101,7 +101,7 @@ input.addEventListener('keydown',e=>{
     const list = desk.querySelector('#deskDomains');
     const batch = desk.querySelector('.desk-batch');
     function fitHistory() {
-      const overflow = selected === 'history' && list.children.length > 24;
+      const overflow = list.children.length > 24;
       if (overflow) {
         const last = list.children[23];
         list.style.maxHeight = (last.offsetTop + last.offsetHeight) + 'px';
@@ -113,7 +113,7 @@ input.addEventListener('keydown',e=>{
       const saved = selected === 'saved';
       const history = readHistory();
       const favorites = getFavorites();
-      const domains = saved ? favorites.slice(0, 6) : history;
+      const domains = saved ? favorites : history;
       for (const button of buttons) {
         const isHistory = button.dataset.desk === 'history';
         const count = document.createElement('span');
@@ -123,7 +123,7 @@ input.addEventListener('keydown',e=>{
         button.setAttribute('aria-pressed', String(button.dataset.desk === selected));
       }
       batch.textContent = document.querySelector('#batchNav [data-nav-label]').textContent + ' ↗';
-      list.classList.toggle('desk-history', !saved);
+      list.classList.add('desk-history');
       list.replaceChildren();
       if (!domains.length) {
         const note = document.createElement('p');

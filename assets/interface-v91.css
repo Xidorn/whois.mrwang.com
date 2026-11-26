@@ -681,10 +681,10 @@ select option{background:var(--sheet);color:var(--text)}
 .quote-values .promo-block{gap:8px;width:100%}
 .quote-values .promo-price-line{gap:6px 10px;align-items:baseline}
 .quote-values .promo-code-line{gap:6px;align-items:center;width:100%}
-.quote-values .promo-copy{display:inline-grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:7px;min-height:34px;padding:6px 9px;border:0;border-radius:7px;background:var(--inner);box-shadow:inset 0 -1px var(--line);text-align:start;max-width:100%;line-height:1.4}
+.quote-values .promo-copy{display:inline-grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:7px;min-height:34px;padding:6px 9px;border:0;border-radius:7px;background:var(--inner);box-shadow:inset 0 -1px var(--line);text-align:start;max-width:100%;line-height:1.4}
 .promo-copy svg{flex:none;display:block}
-.promo-copy-feedback{visibility:hidden;font-size:11px;font-weight:600;color:var(--accent);white-space:normal;overflow-wrap:anywhere;max-width:10em}
-.promo-copy.is-copied .promo-copy-feedback{visibility:visible}
+.promo-copy-feedback{display:none;font-size:11px;font-weight:600;color:var(--accent);white-space:normal;overflow-wrap:anywhere;max-width:10em}
+.promo-copy.is-copied .promo-copy-feedback{display:block;visibility:visible}
 .quote-values .promo-copy.is-copied{color:var(--accent);box-shadow:inset 0 -2px var(--accent)}
 .quote-values .promo-terms{line-height:1.65;font-size:11px}
 .quote-values .promo-copy:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -734,14 +734,14 @@ select option{background:var(--sheet);color:var(--text)}
 #mobilePriceDialog .quote-values{min-width:0;gap:8px}
 #mobilePriceDialog .quote-price,#mobilePriceDialog .promo-price{font-variant-numeric:tabular-nums;line-height:1.35;overflow-wrap:anywhere;white-space:normal}
 .quote-values .promo-code-line{justify-content:flex-end;gap:8px}
-.quote-values .promo-copy{grid-template-columns:minmax(0,1fr) 14px minmax(0,auto);column-gap:7px;align-items:center;box-sizing:border-box;min-width:0;max-width:100%;min-height:36px;padding:7px 10px;box-shadow:inset 0 -1px var(--line);border:0;line-height:1.4;transition:color .15s,background-color .15s,box-shadow .15s}
+.quote-values .promo-copy{grid-template-columns:minmax(0,1fr) 14px;column-gap:7px;align-items:center;box-sizing:border-box;min-width:0;max-width:100%;min-height:36px;padding:7px 10px;box-shadow:inset 0 -1px var(--line);border:0;line-height:1.4;transition:color .15s,background-color .15s,box-shadow .15s}
 .quote-values .promo-copy b{grid-column:1;grid-row:1;min-width:0;overflow-wrap:anywhere;word-break:break-word}
 .quote-values .promo-copy svg{grid-column:2;grid-row:1;width:14px;height:14px;align-self:center;justify-self:center}
 .quote-values .promo-copy .promo-copy-check{visibility:hidden}
 .quote-values .promo-copy.is-copied svg:not(.promo-copy-check){visibility:hidden}
 .quote-values .promo-copy.is-copied .promo-copy-check{visibility:visible}
-.quote-values .promo-copy-feedback{grid-column:3;grid-row:1;visibility:hidden;max-width:9em;min-width:0;text-align:start;line-height:1.4;overflow-wrap:anywhere}
-.quote-values .promo-copy.is-copied .promo-copy-feedback{visibility:visible}
+.quote-values .promo-copy-feedback{grid-column:3;grid-row:1;display:none;max-width:9em;min-width:0;text-align:start;line-height:1.4;overflow-wrap:anywhere}
+.quote-values .promo-copy.is-copied .promo-copy-feedback{display:block;visibility:visible}
 .quote-values .promo-copy.is-copied{background:var(--wash);color:var(--accent);box-shadow:inset 0 -1px var(--accent)}
 #mobilePriceDialog .mobile-price-body{scrollbar-gutter:stable;overscroll-behavior:contain}
 #mobilePriceDialog .quote-footer{align-items:flex-start;line-height:1.5}
@@ -755,3 +755,12 @@ select option{background:var(--sheet);color:var(--text)}
 @media(max-width:360px){#mobilePriceDialog .quote-row{grid-template-columns:minmax(0,1fr);gap:8px}}
 @media(hover:none){.quote-values .promo-copy:not(.is-copied):hover{background:var(--inner);color:var(--text)}}
 @media(prefers-reduced-motion:reduce){.quote-values .promo-copy{transition:none}}
+
+/* V96: compact coupon feedback, shared domain library layout. */
+.quote-values .promo-copy.is-copied{grid-template-columns:minmax(0,1fr) 14px minmax(0,auto)}
+.quote-values .promo-copy-feedback{white-space:normal;overflow-wrap:anywhere}
+.desk-domains.desk-history{scrollbar-gutter:auto;gap:0 20px}
+.desk-history a{padding-inline:8px;min-width:0;overflow-wrap:anywhere;word-break:break-word;transition:background-color .15s,color .15s}
+@media(hover:hover){.desk-history a:hover{background:var(--inner);border-bottom-color:var(--line);color:var(--accent)}}
+@media(max-width:500px){.desk-domains.desk-history{gap:0 10px}.desk-history a{padding-inline:4px;min-height:44px;font-size:.875rem}.desk-tabs{gap:12px}.desk-tabs button{min-width:0;white-space:normal}}
+@media(prefers-reduced-motion:reduce){.desk-history a{transition:none}}
