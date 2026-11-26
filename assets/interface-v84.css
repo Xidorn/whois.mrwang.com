@@ -1,0 +1,37 @@
+/* V84: one calm focus surface; no nested input outline or sticky touch hover. */
+#searchForm{min-width:0;transition:border-color .18s,box-shadow .18s}
+#searchForm #domainInput{border:0;box-shadow:none;background:transparent;outline:none;min-width:0}
+#searchForm:focus-within{border-color:var(--accent);box-shadow:0 0 0 2px var(--wash)}
+#searchForm button:focus-visible{outline-offset:-3px}
+@media (hover:none),(pointer:coarse){
+ #searchForm,#searchForm:focus-within{box-shadow:none}
+ #searchForm:not(:focus-within):hover{border-color:var(--line);background:var(--sheet)}
+ #searchForm #domainInput{font-size:16px; -webkit-tap-highlight-color:transparent}
+ #searchForm .clear-input:hover{background:transparent;color:var(--mute)}
+ #searchForm .search-icon:hover{background:var(--accent);color:var(--accentText);transform:none;filter:none;box-shadow:none}
+ #searchForm .search-icon:active{opacity:.82}
+ .batch-card textarea,.suffix-search{font-size:16px;outline-offset:0;box-shadow:none}
+ .batch-card textarea:focus,.suffix-search:focus{outline:1px solid var(--accent);border-color:var(--accent)}
+}
+/* Original records: native disclosure, quiet document viewer, shared theme colors. */
+#content .raw{padding:4px var(--ui-pad) 6px!important}
+#content .raw details{min-width:0;max-width:100%;padding:0;border-radius:0}
+#content .raw summary{display:flex;align-items:center;justify-content:flex-start;gap:11px;min-height:60px;padding:10px 0;font-size:14px;font-weight:650;line-height:1.5;list-style:none;cursor:pointer;user-select:none}
+#content .raw summary::after{content:none}
+#content .raw summary::marker{content:''}
+#content .raw summary:focus-visible{outline-offset:-2px;border-radius:8px}
+.raw-symbol{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:9px;background:var(--inner);color:var(--accent);font:600 13px/1 ui-monospace,monospace}
+.raw-title{flex:1;min-width:0;overflow-wrap:anywhere}
+.raw-chevron{flex:none;width:9px;height:9px;border-right:1.7px solid var(--mute);border-bottom:1.7px solid var(--mute);transform:rotate(45deg);margin:0 5px 4px 0;transition:transform .2s,color .2s}
+.raw details[open] .raw-chevron{transform:rotate(225deg);margin-bottom:-4px;border-color:var(--accent)}
+.raw details[open] .raw-title{color:var(--accent)}
+.raw-view{min-width:0;max-width:100%;margin:0 0 15px;border-radius:12px;background:var(--inner);overflow:hidden}
+#content .raw .raw-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 14px;background:transparent;border:0;border-bottom:1px solid var(--line)}
+.raw-format{font:600 11px/1.4 ui-monospace,monospace;letter-spacing:.08em;color:var(--mute)}
+#content .raw .copy{display:inline-flex;align-items:center;gap:7px;border:0;background:transparent;color:var(--accent);font-size:12px;font-weight:600;min-height:36px;padding:6px 10px;border-radius:7px;box-shadow:none}
+#content .raw .copy::before{content:'';width:14px;height:14px;background:currentColor;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8'%3E%3Crect x='8' y='8' width='12' height='12' rx='2'/%3E%3Cpath d='M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2'/%3E%3C/svg%3E") center/contain no-repeat}
+#content .raw .code{border:0;border-radius:0;background:transparent;margin:0;padding:16px;min-width:0;max-width:100%;max-height:min(60vh,540px);font:12.5px/1.8 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal;tab-size:2;overflow:auto;overscroll-behavior:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+#content .raw .code:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+@media(hover:hover) and (pointer:fine){#content .raw summary:hover .raw-title{color:var(--accent)}#content .raw .copy:hover{background:var(--wash)}}
+@media(max-width:760px){#content .raw summary{min-height:54px;font-size:13px;gap:9px}.raw-symbol{width:30px;height:30px}.raw-view{border-radius:9px;margin-bottom:12px}#content .raw .raw-tools{padding:5px 10px}#content .raw .copy{min-height:44px}#content .raw .code{font-size:12px;line-height:1.75;padding:12px;max-height:min(55vh,440px)}}
+@media(prefers-reduced-motion:reduce){#searchForm,.raw-chevron{transition:none}}
