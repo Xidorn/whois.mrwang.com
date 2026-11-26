@@ -74,8 +74,14 @@ for(const select of [currencySelect,mobileCurrencySelect]){
   paint();requestShownOffers();
  };
 }
-widget.append(currencySelect);
-mobileClose?.before(mobileCurrencySelect);
+function currencyControl(select){
+ const control=document.createElement('span');
+ control.className='currency-control';
+ control.append(select);
+ return control;
+}
+widget.append(currencyControl(currencySelect));
+mobileClose?.before(currencyControl(mobileCurrencySelect));
 const retryPrice=document.createElement('button');
 retryPrice.type='button';
 retryPrice.className='export-action';
