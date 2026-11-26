@@ -264,12 +264,7 @@ function updateResultTools(){
  const saved=getFavorites().includes(cleanDomain(currentData?.domain||domain)),fav=document.getElementById('favoriteDomain');
  fav.setAttribute('aria-pressed',String(saved));fav.classList.toggle('is-saved',saved);fav.title=xt(saved?1:0);fav.setAttribute('aria-label',fav.title);
  for(const [id,key] of [['exportTxt',2],['exportJson',3]]){const b=document.getElementById(id);b.title=xt(key);b.setAttribute('aria-label',b.title)}
- const sources=[currentData?.whoisData?'WHOIS':'',currentData?.rdapData?'RDAP':''].filter(Boolean).join(' + ')||'API';
- const date=queryCompletedAt?fmtDate(queryCompletedAt.toISOString()):'—';
- const el=document.getElementById('sourceLine');el.hidden=false;el.replaceChildren();
- const entries=[[xt(4),date],[xt(5),sources]];
- if(lifecycleRecord)entries.push([lang==='zh'?'本浏览器首次观察到当前阶段':lang==='zh-Hant'?'本瀏覽器首次觀察到目前階段':'Current stage first seen in this browser',fmtDate(lifecycleRecord.firstSeen)]);
- for(const [label,value] of entries){const item=document.createElement('span');const name=document.createElement('span');name.textContent=label+': ';const val=document.createElement('b');val.textContent=value;item.append(name,val);el.append(item)}
+
 }
 function downloadResult(type){
  if(!currentData)return;

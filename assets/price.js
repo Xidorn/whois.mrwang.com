@@ -74,15 +74,8 @@ for(const select of [currencySelect,mobileCurrencySelect]){
   paint();requestShownOffers();
  };
 }
-function currencyField(select){
- const field=document.createElement('label');
- field.className='currency-field';
- const caption=document.createElement('span');
- field.append(caption,select);
- return field;
-}
-widget.prepend(currencyField(currencySelect));
-mobileRail?.before(currencyField(mobileCurrencySelect));
+widget.append(currencySelect);
+mobileClose?.before(mobileCurrencySelect);
 const retryPrice=document.createElement('button');
 retryPrice.type='button';
 retryPrice.className='export-action';
@@ -100,22 +93,21 @@ function preferredCurrency(){
 function syncCurrency(select){
  const locale=language();
  const labels={en:'Quote currency',zh:'报价币种','zh-Hant':'報價幣別',de:'Währung',fr:'Devise',ja:'表示通貨',es:'Moneda',pt:'Moeda',it:'Valuta',ko:'표시 통화',ru:'Валюта',ar:'العملة',hi:'मुद्रा',id:'Mata uang'};
- const automatic={en:'Automatic',zh:'自动','zh-Hant':'自動',de:'Automatisch',fr:'Automatique',ja:'自動',es:'Automático',pt:'Automático',it:'Automatica',ko:'자동',ru:'Автоматически',ar:'تلقائي',hi:'स्वचालित',id:'Otomatis'};
  const options=currencyOptions();
- const auto=[LC[locale],'USD',...options].find(code=>options.includes(code))||'CNY';
- const signature=[locale,auto,...options].join('|');
+ const signature=[locale,...options].join('|');
  if(select.dataset.options!==signature){
   select.dataset.options=signature;
-  select.previousElementSibling.textContent=labels[locale]||labels.en;
-  let names;
-  try{names=new Intl.DisplayNames([locale],{type:'currency'})}catch{}
+  select.setAttribute('aria-label',labels[locale]||labels.en);
+  const symbols={USD:'$',CNY:'¥',JPY:'JP¥',EUR:'€',GBP:'£',CAD:'CA$',AUD:'A$',HKD:'HK$',SGD:'S$',NZD:'NZ$',KRW:'₩',AED:'د.إ',NGN:'₦',BAM:'KM',GEL:'₾',RUB:'₽',INR:'₹',BRL:'R$',IDR:'Rp'};
   const items=options.map(code=>{
-   const name=names?.of(code);
-   return new Option(name&&name!==code?code+' · '+name:code,code);
+   const symbol=symbols[code]||new Intl.NumberFormat(locale,{style:'currency',currency:code,currencyDisplay:'narrowSymbol'}).formatToParts(0).find(part=>part.type==='currency')?.value||code;
+   const item=new Option(symbol,code);
+   item.setAttribute('aria-label',code+' '+symbol);
+   return item;
   });
-  select.replaceChildren(new Option((automatic[locale]||automatic.en)+' · '+auto,''),...items);
+  select.replaceChildren(...items);
  }
- select.value=options.includes(currencyChoice)?currencyChoice:'';
+ select.value=preferredCurrency();
 }
 
 function convert(row,op,currency){const original=finite(row?.[op]),cny=finite(row?.[op+'_cny']),native=String(row?.currency||'').toUpperCase();if(original===null&&cny===null)return null;if(currency===native&&original!==null)return original;if(currency==='CNY'&&cny!==null)return cny;if(cny!==null&&rates[currency]>0)return cny/rates[currency];return null}

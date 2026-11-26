@@ -143,3 +143,29 @@ main.wrap{width:100%;max-width:var(--layout-width);padding:clamp(18px,3vw,38px) 
 .desk-history p { grid-column:1/-1; padding-block:12px; }
 @media(max-width:700px){.desk-domains.desk-history{grid-template-columns:repeat(3,minmax(0,1fr));}}
 @media(max-width:500px){.desk-domains.desk-history{grid-template-columns:repeat(2,minmax(0,1fr));}}
+
+/* Identical content edges on both lookup routes. */
+main.hero,main.wrap {
+ box-sizing:border-box; width:100%; max-width:var(--layout-width); margin-inline:auto;
+ padding-inline:var(--layout-gutter)!important;
+}
+main.hero .hero-inner,main.hero #searchForm {
+ box-sizing:border-box; width:100%!important; max-width:100%; margin-inline:0;
+}
+@media(max-width:760px){
+ main.hero,main.wrap { padding-inline:max(var(--page-edge),env(safe-area-inset-left)) max(var(--page-edge),env(safe-area-inset-right))!important; }
+}
+@media(min-width:761px){
+ #priceWidget:not([hidden]) { display:flex; align-items:center; gap:8px; }
+ #priceWidget .price-rail { flex:1; min-width:0; }
+}
+#priceWidget .quote-currency,.mobile-price-head .quote-currency {
+ flex:0 0 auto; width:auto; min-width:3.25em; max-width:6em; min-height:44px; margin:0;
+ border:0; border-radius:8px; padding:4px; background:var(--inner); color:var(--text);
+ font:inherit; font-size:16px; cursor:pointer;
+}
+.mobile-price-head { gap:8px; }
+.mobile-price-head strong { flex:1; min-width:0; }
+.mobile-price-body { padding-top:8px; }
+#content .raw { padding-block:14px!important; }
+#content .export-bar { margin-bottom:10px; gap:8px; }
