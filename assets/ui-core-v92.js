@@ -20,7 +20,7 @@
  window.WhoisTimezone={format,zone,day};
  const labels={zh:['时区','跟随系统','自动保存于此浏览器','恢复默认'],'zh-Hant':['時區','跟隨系統','自動儲存於此瀏覽器','恢復預設'],en:['Time zone','System time zone','Automatically saved in this browser','Reset'],ja:['タイムゾーン','システム設定','ブラウザーに自動保存','リセット'],de:['Zeitzone','Systemzeitzone','Im Browser gespeichert','Zurücksetzen'],fr:['Fuseau horaire','Fuseau système','Enregistré dans le navigateur','Réinitialiser'],es:['Zona horaria','Zona del sistema','Guardado en el navegador','Restablecer'],pt:['Fuso horário','Fuso do sistema','Salvo no navegador','Redefinir'],it:['Fuso orario','Fuso di sistema','Salvato nel browser','Ripristina'],ko:['시간대','시스템 시간대','브라우저에 자동 저장','초기화'],ru:['Часовой пояс','Системный часовой пояс','Сохранено в браузере','Сбросить'],ar:['المنطقة الزمنية','توقيت النظام','حفظ تلقائي في المتصفح','إعادة ضبط'],hi:['समय क्षेत्र','सिस्टम समय क्षेत्र','ब्राउज़र में स्वतः सहेजा गया','रीसेट'],id:['Zona waktu','Zona sistem','Disimpan di browser','Atur ulang']};
  const common=['UTC','Asia/Shanghai','Asia/Hong_Kong','Asia/Taipei','Asia/Tokyo','Asia/Singapore','Asia/Kolkata','Europe/London','Europe/Paris','America/New_York','America/Los_Angeles','Australia/Sydney'];
- function mount(){const panel=document.getElementById('choice-display-panel');if(!panel)return;const section=document.createElement('div');section.className='settings-section timezone-settings';section.innerHTML='<label class="settings-label" for="timezoneSelect"></label><select id="timezoneSelect"></select><div class="timezone-foot"><small></small></div>';panel.insertBefore(section,panel.querySelector('.display-footer'));const select=section.querySelector('select'),label=section.querySelector('label'),note=section.querySelector('small');let all=[];try{all=Intl.supportedValuesOf?.('timeZone')||[]}catch{}const zones=[...new Set([...common,zone(),...all.sort(),...(selected==='auto'?[]:[selected])])].filter(valid);select.add(new Option('', 'auto'));for(const z of zones)select.add(new Option(z,z));function sync(){const l=document.documentElement.lang;const a=labels[l==='zh-CN'?'zh':l==='zh-TW'?'zh-Hant':l]||labels.en;label.textContent=a[0];select.options[0].textContent=a[1]+' ('+(Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC')+')';note.textContent=a[2];select.value=selected}function change(v){if(v!=='auto'&&!valid(v))return;selected=v;let saved=true;try{v==='auto'?localStorage.removeItem(key):localStorage.setItem(key,v)}catch{saved=false}sync();if(!saved)note.textContent='Session only';window.dispatchEvent(new Event('whois-timezone-change'))}select.onchange=()=>change(select.value);window.WhoisTimezone.reset=()=>change('auto');window.WhoisTimezone.preference=()=>selected;window.WhoisTimezone.resetLabel=()=>{const l=document.documentElement.lang;return (labels[l==='zh-CN'?'zh':l==='zh-TW'?'zh-Hant':l]||labels.en)[3]};new MutationObserver(sync).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});window.addEventListener('storage',e=>{if(e.key===key||e.key===null){selected=e.newValue&&valid(e.newValue)?e.newValue:'auto';if(selected!=='auto'&&![...select.options].some(o=>o.value===selected))select.add(new Option(selected,selected));sync();window.dispatchEvent(new Event('whois-timezone-change'))}});sync()}
+ function mount(){const panel=document.getElementById('choice-display-panel');if(!panel)return;const section=document.createElement('div');section.className='settings-section timezone-settings';section.innerHTML='<label class="settings-label" for="timezoneSelect"></label><select id="timezoneSelect"></select><div class="timezone-foot"><small></small></div>';panel.insertBefore(section,panel.querySelector('.display-footer'));const select=section.querySelector('select'),label=section.querySelector('label'),note=section.querySelector('small');let all=[];try{all=Intl.supportedValuesOf?.('timeZone')||[]}catch{}const zones=[...new Set([...common,zone(),...all.sort(),...(selected==='auto'?[]:[selected])])].filter(valid);select.add(new Option('', 'auto'));for(const z of zones)select.add(new Option(z,z));function sync(){const l=document.documentElement.lang;const a=labels[l==='zh-CN'?'zh':l==='zh-TW'?'zh-Hant':l]||labels.en;label.textContent=a[0];select.options[0].textContent=a[1]+' ('+(Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC')+')';note.textContent=a[2];select.value=selected}function change(v){if(v!=='auto'&&!valid(v))return;selected=v;let saved=true;try{v==='auto'?localStorage.removeItem(key):localStorage.setItem(key,v)}catch{saved=false}sync();if(!saved)note.textContent='Session only';window.dispatchEvent(new Event('whois-timezone-change'))}select.onchange=()=>change(select.value);window.WhoisTimezone.reset=()=>change('auto');window.WhoisTimezone.preference=()=>selected;window.WhoisTimezone.resetLabel=()=>{const l=document.documentElement.lang;return (labels[l==='zh-CN'?'zh':l==='zh-TW'?'zh-Hant':l]||labels.en)[3]};new MutationObserver(sync).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});window.addEventListener('storage',e=>{if(e.key===key||e.key===null){selected=e.key===key&&e.newValue&&valid(e.newValue)?e.newValue:'auto';if(selected!=='auto'&&![...select.options].some(o=>o.value===selected))select.add(new Option(selected,selected));sync();window.dispatchEvent(new Event('whois-timezone-change'))}});sync()}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);else mount();
 })();
 
@@ -185,6 +185,31 @@ const FAVORITES_CLEAR={"en": "Clear saved", "zh": "清空收藏", "zh-Hant": "�
 /* Ordered, translated native language list shared by both pages. */
 const LANGUAGE_GROUPS = {"en":["Language","International","East Asia","Europe","Other regions"],"zh":["语言","国际","东亚语言","欧洲语言","其他地区"],"zh-Hant":["語言","國際","東亞語言","歐洲語言","其他地區"],"ja":["言語","国際","東アジア","ヨーロッパ","その他の地域"],"ko":["언어","국제","동아시아","유럽","기타 지역"],"de":["Sprache","International","Ostasien","Europa","Weitere Regionen"],"fr":["Langue","International","Asie de l’Est","Europe","Autres régions"],"es":["Idioma","Internacional","Asia oriental","Europa","Otras regiones"],"pt":["Idioma","Internacional","Leste Asiático","Europa","Outras regiões"],"it":["Lingua","Internazionale","Asia orientale","Europa","Altre regioni"],"ru":["Язык","Международный","Восточная Азия","Европа","Другие регионы"],"id":["Bahasa","Internasional","Asia Timur","Eropa","Wilayah lain"],"hi":["भाषा","अंतरराष्ट्रीय","पूर्वी एशिया","यूरोप","अन्य क्षेत्र"],"ar":["اللغة","دولي","شرق آسيا","أوروبا","مناطق أخرى"]};
 const LANGUAGE_ORDER=[['en'],['zh','zh-Hant','ja','ko'],['de','fr','es','pt','it','ru'],['id','hi','ar']];
+// Shared language preference: validate codes and resync restored documents.
+function normalizeWhoisLanguage(value){
+ const v=String(value||'').trim().toLowerCase().replace(/_/g,'-');
+ if(/^zh(?:-|$)/.test(v))return /(?:hant|tw|hk|mo)(?:-|$)/.test(v)?'zh-Hant':'zh';
+ const code=v.split('-')[0];
+ return Object.prototype.hasOwnProperty.call(LANGUAGE_GROUPS,code)?code:'';
+}
+function readWhoisLanguage(){
+ try{return normalizeWhoisLanguage(localStorage.getItem('whoisLang'))}catch{
+  try{return normalizeWhoisLanguage(document.cookie.match(/(?:^|;\s*)whoisLang=([^;]*)/)?.[1])}catch{return ''}
+ }
+}
+function saveWhoisLanguage(code){
+ code=normalizeWhoisLanguage(code);if(!code)return;
+ try{localStorage.setItem('whoisLang',code)}catch{
+  try{document.cookie='whoisLang='+code+'; Path=/; Max-Age=31536000; SameSite=Lax'+(location.protocol==='https:'?'; Secure':'')}catch{}
+ }
+}
+function detectWhoisLanguage(){return readWhoisLanguage()||normalizeWhoisLanguage(navigator.language)||'en'}
+function bindWhoisLanguage(select){
+ const sync=()=>{const code=detectWhoisLanguage();if(code!==select.value){select.value=code;select.dataset.syncingLanguage='1';try{select.dispatchEvent(new Event('change',{bubbles:true}))}finally{delete select.dataset.syncingLanguage}}};
+ window.addEventListener('storage',e=>{if(e.key==='whoisLang'||e.key===null)sync()});
+ window.addEventListener('pageshow',()=>sync());
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync()});
+}
 function populateLanguageSelect(select, dictionary){
  if(!select)return;const chosen=select.value;select.replaceChildren();
  LANGUAGE_ORDER.forEach((codes,idx)=>{const group=document.createElement('optgroup');group.dataset.group=String(idx);for(const code of codes){if(!dictionary[code])continue;group.append(new Option(dictionary[code].name,code))}if(group.children.length)select.append(group)});
@@ -205,7 +230,7 @@ const TOAST_TEXT={
  de:{copied:'Kopiert',copyFailed:'Kopieren fehlgeschlagen. Bitte manuell kopieren.'},fr:{copied:'Copié',copyFailed:'Échec de la copie. Copiez manuellement.'},ja:{copied:'コピーしました',copyFailed:'コピーできませんでした。手動でコピーしてください。'},
  es:{copied:'Copiado',copyFailed:'No se pudo copiar. Copia manualmente.'},pt:{copied:'Copiado',copyFailed:'Falha ao copiar. Copie manualmente.'},it:{copied:'Copiato',copyFailed:'Copia non riuscita. Copia manualmente.'},ko:{copied:'복사됨',copyFailed:'복사하지 못했습니다. 직접 복사해 주세요.'},ru:{copied:'Скопировано',copyFailed:'Не удалось скопировать. Скопируйте вручную.'},ar:{copied:'تم النسخ',copyFailed:'تعذر النسخ. انسخ يدويًا.'},hi:{copied:'कॉपी किया गया',copyFailed:'कॉपी नहीं हो सका। कृपया मैन्युअल रूप से कॉपी करें।'},id:{copied:'Tersalin',copyFailed:'Gagal menyalin. Silakan salin secara manual.'}
 };
-function currentUiLang(){const v=document.getElementById('langSelect')?.value||document.documentElement.lang||'en';return v==='zh-CN'?'zh':v==='zh-TW'?'zh-Hant':String(v).split('-')[0]}
+function currentUiLang(){return normalizeWhoisLanguage(document.getElementById('langSelect')?.value||document.documentElement.lang)||'en'}
 function toastText(key){const code=currentUiLang();return (TOAST_TEXT[code]||TOAST_TEXT.en)[key]||TOAST_TEXT.en[key]}
 let toastTimer=0;
 function showToast(message,type='success'){
