@@ -107,9 +107,7 @@ const SHARE_I18N={"en":["Share","Link copied","Copy query link"],"zh":["分享",
 function shareLabel(i){return (SHARE_I18N[lang]||SHARE_I18N.en)[i]}
 function renderDates(d){let reg='';reg+=row(t('created'),fmtDate(d.creationDateISO8601||d.creationDate));reg+=row(t('expires'),fmtDate(d.expirationDateISO8601||d.expirationDate));reg+=row(t('updated'),fmtDate(d.updatedDateISO8601||d.updatedDate));reg+=row(t('availableDate'),fmtDate(d.availableDateISO8601||d.availableDate));setPanel('registrationPanel',reg);}
 function render(d){currentData=d;const displayDomain=d.domain||domain;setResultTitle(displayDomain);document.getElementById('domainTitle').textContent=displayDomain;window.updateDomainPrice?.(displayDomain);const share=document.getElementById('shareLink');share.setAttribute('aria-label',shareLabel(2));share.title=shareLabel(2);const state=stateOf(d);
-const registrationState=document.getElementById('registrationState');
-registrationState.hidden=false;registrationState.dataset.state=state;
-registrationState.textContent=state==='rateLimited'?t('unknown'):t(state);
+
 const notice=document.getElementById('stateNotice');const nk=state==='reserved'?'reservedNotice':state==='available'?'availableNotice':state==='unknown'||state==='rateLimited'?'unknownNotice':'';notice.hidden=!nk;notice.innerHTML=nk?`<strong>${esc(state==='rateLimited'?WhoisLookup.message({kind:state},lang):t(state))}.</strong> ${esc(t(nk))}`:'';
 renderMetrics(d);
 renderDates(d);
@@ -267,35 +265,9 @@ function rememberLifecycle(data){
 function updateResultTools(){
  const saved=getFavorites().includes(cleanDomain(currentData?.domain||domain)),fav=document.getElementById('favoriteDomain');
  fav.setAttribute('aria-pressed',String(saved));fav.classList.toggle('is-saved',saved);fav.title=xt(saved?1:0);fav.setAttribute('aria-label',fav.title);
- for(const [id,key] of [['exportTxt',2],['exportJson',3]]){const b=document.getElementById(id);b.title=xt(key);b.setAttribute('aria-label',b.title)}
 
 }
-function downloadResult(type){
- if(!currentData)return;
- const d=currentData,name=cleanDomain(d.domain||domain)||domain;
- let blob;
- if(type==='json'){
-   blob=new Blob([JSON.stringify({domain:name,queriedAt:queryCompletedAt?.toISOString()||null,data:d},null,2)],{type:'application/json;charset=utf-8'});
- }else{
-   // TXT is WHOIS, not a synthetic combination of WHOIS + JSON + localized page labels.
-   // Preserve registry-provided line breaks and non-Latin characters.
-   const raw=typeof d.whoisData==='string'?d.whoisData:'';
-   const text=raw.trim()?raw.replace(/\r?\n/g,'\r\n'):
-     ['WHOIS data unavailable for '+name,'','Domain: '+name,
-      'Registration status: '+stateOf(d),'Registrar: '+(d.registrar||'Not disclosed'),
-      'Registration date: '+(d.creationDateISO8601||d.creationDate||'Not disclosed'),
-      'Expiration date: '+(d.expirationDateISO8601||d.expirationDate||'Not disclosed'),
-      'Name servers: '+(Array.isArray(d.nameServers)?d.nameServers.join(', '):'Not disclosed'),
-      '','For structured information, export JSON.'].join('\r\n');
-   blob=new Blob(['\uFEFF',text],{type:'text/plain;charset=utf-8'});
- }
- const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=name+'.'+type;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);
-}
 document.getElementById('favoriteDomain').addEventListener('click',()=>{toggleFavorite(currentData?.domain||domain);updateResultTools();renderFavorites()});
-document.getElementById('exportTxt').addEventListener('click',()=>downloadResult('txt'));
-document.getElementById('exportJson').addEventListener('click',()=>downloadResult('json'));
 
 window.addEventListener("whois-timezone-change",()=>{if(currentData){renderDates(currentData);renderMetrics(currentData);updateResultTools()}});
 
-// V62: quick actions, retaining the original raw export data.
-(()=>{const bar=document.querySelector('.export-bar');if(!bar)return;const refresh=document.createElement('button'),copy=document.createElement('button');for(const b of [refresh,copy]){b.type='button';b.className='export-action';bar.prepend(b)}function labels(){const l=document.documentElement.lang;const zh=l==='zh-CN',tw=l==='zh-TW';refresh.textContent=zh?'重新查询':tw?'重新查詢':'Refresh';copy.textContent=zh?'复制域名':tw?'複製網域':'Copy domain'}labels();new MutationObserver(labels).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});refresh.onclick=()=>load();copy.onclick=()=>copyText(copy,currentData?.domain||domain);})();

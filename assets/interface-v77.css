@@ -1,0 +1,56 @@
+/* V77 — shared perimeter treatment, quiet internal hierarchy. */
+:root{--ui-radius:18px;--ui-gap:16px;--ui-pad:clamp(16px,2.6vw,28px)}
+#content{gap:var(--ui-gap)}
+#content .domain-head,#content .record-flow,#content .raw,.lookup-desk,.batch-body .batch-card,.batch-body .batch-results{box-sizing:border-box;border:1.5px solid var(--line)!important;border-radius:var(--ui-radius);background:var(--sheet);box-shadow:var(--shadow);min-width:0}
+#content .domain-head{border-width:2px!important;--ring-speed:5s;--ring-strength:var(--accent)}
+#content .record-flow{--ring-speed:9s;--ring-delay:-3s}
+#content .raw{--ring-speed:10s;--ring-delay:-6s}
+.lookup-desk,.batch-body .batch-card{--ring-speed:10s;--ring-delay:-2s}
+.batch-body .batch-results{--ring-speed:7s;--ring-delay:-4s}
+@supports (background:conic-gradient(from 0deg,red,blue)){
+ #content .domain-head,#content .record-flow,#content .raw,.lookup-desk,.batch-body .batch-card,.batch-body .batch-results{
+ border-color:transparent!important;
+ background:linear-gradient(var(--sheet),var(--sheet)) padding-box,conic-gradient(from var(--result-angle),var(--line) 0%,var(--line) 12%,var(--ring-strength,var(--accent)) 23%,var(--status) 30%,var(--line) 43%,var(--line) 77%,var(--accent) 92%,var(--line)) border-box;
+ animation:result-edge var(--ring-speed,9s) linear infinite;animation-delay:var(--ring-delay,0s)
+ }
+}
+/* Retire the old competing batch overlay. Native focus remains intact. */
+.batch-body .batch-results::before,.batch-body .batch-results::after{content:none!important;display:none!important;animation:none!important}
+#content .record-flow{padding:0;gap:0}
+#content .record-flow .record-group{box-shadow:none;background:transparent}
+#content .record-group-head h2{font-size:clamp(16px,1.7vw,19px);line-height:1.4;letter-spacing:-.015em}
+#content .record-subgroup h3{color:var(--mute);font-weight:650;margin:0 0 10px}
+#content .record-group .value{overflow-wrap:anywhere;min-width:0}
+#content .raw{padding:6px var(--ui-pad)!important}
+#content .raw:not(:has(>details:not([hidden]))){display:none}
+#content .raw details{margin:0;border:0;background:transparent}
+#content .raw details:not([hidden])~details:not([hidden]){border-top:1px solid var(--line)}
+#content .raw summary{min-height:52px;font-weight:650}
+#content .raw .code{max-width:100%;overflow:auto;border-radius:10px}
+.lookup-desk{padding:0 var(--ui-pad) 16px;margin-top:24px}
+.batch-body .batch-card,.batch-body .batch-results{padding:var(--ui-pad)}
+.batch-body .batch-results{margin-top:var(--ui-gap)}
+.batch-body .batch-stats{background:var(--inner);border-radius:10px}
+.batch-body .batch-stat{background:transparent}
+.batch-body .batch-stat[aria-pressed=true]{background:var(--wash)}
+@media(max-width:850px){#content .record-flow{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:760px){:root{--ui-radius:14px;--ui-gap:12px;--ui-pad:16px}#content .domain-head{border-radius:var(--ui-radius)}#content .raw summary{min-height:48px}.lookup-desk{margin-top:18px}.batch-body .batch-card,.batch-body .batch-results{padding:14px}}
+@media(prefers-reduced-motion:reduce){#content .domain-head,#content .record-flow,#content .raw,.lookup-desk,.batch-body .batch-card,.batch-body .batch-results{animation:none!important}}
+
+/* V78 — compact domain heading and accessible icon-only mobile pricing. */
+#content .domain-summary{flex:1 1 auto;min-width:0;flex-wrap:nowrap;align-items:center;gap:8px}
+#content .domain-summary .domain{min-width:0;overflow-wrap:anywhere}
+.price-accessible-label{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+#content .mobile-price-toggle{display:none}
+@media(max-width:760px){
+ #content .domain-line{gap:0}
+ #content .domain-identity{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px}
+ #content .domain-summary{display:flex;align-items:center;justify-content:flex-start;gap:6px}
+ #content .domain-summary .domain{font-size:clamp(20px,5.6vw,32px);line-height:1.2;letter-spacing:-.035em}
+ #content .domain-summary .mobile-price-toggle:not([hidden]){display:inline-flex;position:relative;align-items:center;justify-content:center;flex:0 0 44px;width:44px;height:44px;min-height:44px;margin:0;padding:0;border:1px solid var(--line);border-radius:10px;background:var(--wash);color:var(--accent)}
+ #content .mobile-price-toggle svg{width:20px;height:20px;flex:none}
+ #content .domain-identity .meta-line{gap:4px;align-self:center;margin:0}
+ #content .domain-identity .share-link{width:40px;height:44px;flex-basis:40px;border-radius:10px}
+ #content .domain-head #metrics{margin-top:14px!important}
+}
+#content .mobile-price-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}

@@ -1,0 +1,33 @@
+/* V79: quiet surfaces with a single animated underline. */
+@keyframes surface-underline { from { background-position:0 0,0% 100%; } to { background-position:0 0,200% 100%; } }
+#content .domain-head,#content .record-flow,#content .raw,.lookup-desk,.batch-body .batch-card,.batch-body .batch-results {
+ border:0!important;border-radius:var(--ui-radius);background:linear-gradient(var(--sheet),var(--sheet)) top / 100% calc(100% - 2px) no-repeat,linear-gradient(90deg,var(--line),var(--accent),var(--status),var(--line),var(--accent),var(--status),var(--line)) bottom / 200% 2px no-repeat;
+ background-color:var(--sheet);animation:surface-underline var(--ring-speed,9s) linear infinite;animation-delay:var(--ring-delay,0s);box-shadow:0 8px 30px color-mix(in srgb,var(--text) 5%,transparent);
+}
+#content .domain-head{--ring-speed:5s}
+#content .record-flow .record-group:not([hidden])+.record-group:not([hidden]){border-inline-start:0!important}
+#batchResultList{border:0;border-radius:0}
+/* Dropdown surfaces: bottom edge only, selected state and generous hit targets. */
+.topbar .choice-panel,.topbar .nav-popover{border:0;border-bottom:2px solid var(--accent);border-radius:15px;padding:10px;box-shadow:0 12px 44px color-mix(in srgb,var(--text) 15%,transparent);background:var(--sheet);scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.choice-head,.popover-head{padding:8px 10px 12px;margin-bottom:6px}
+.choice-options{gap:4px;padding:2px}
+.choice-option{min-height:44px;padding:9px 11px;border-radius:9px;transition:background-color .15s,color .15s}
+.choice-option.is-current{background:var(--wash);color:var(--accent)}
+.choice-option.is-current .choice-check{color:var(--accent)}
+.choice-option:hover,.choice-option:focus-visible{background:var(--inner)}
+.choice-trigger[aria-expanded=true] .choice-chevron{transform:rotate(180deg)}
+.choice-chevron{transition:transform .18s ease}
+.theme-swatch{border:0;border-bottom:1px solid var(--line)}
+.font-options button,.timezone-foot button{border:0;border-bottom:1px solid var(--line);box-shadow:none;border-radius:8px}
+.font-options button.is-current{border-bottom:2px solid var(--accent);box-shadow:none;background:var(--wash)}
+.timezone-settings select,.batch-tools select,#priceWidget .currency-control select,.mobile-price-head .currency-control select{appearance:none;border:0!important;border-bottom:1px solid var(--line)!important;border-radius:9px 9px 5px 5px;background-color:var(--inner);color:var(--text);min-height:44px;padding-block:9px;padding-inline:12px 32px;transition:background-color .15s,border-color .15s}
+.timezone-settings select,.batch-tools select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2373808f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+[dir=rtl] .timezone-settings select,[dir=rtl] .batch-tools select{background-position:left 12px center}
+.currency-control{border:0;box-shadow:none;border-radius:9px 9px 5px 5px;background:var(--inner)}
+.currency-control::before{content:none!important;animation:none!important}
+#priceWidget .currency-control select,.mobile-price-head .currency-control select{background:transparent}
+.timezone-settings select:hover,.batch-tools select:hover,.currency-control:hover{background-color:var(--wash);border-bottom-color:var(--accent)!important}
+.timezone-settings select:focus,.batch-tools select:focus,.currency-control:focus-within select{border-bottom-color:var(--accent)!important}
+select option{background:var(--sheet);color:var(--text)}
+@media(max-width:760px){.topbar .choice-panel,.topbar .nav-popover{padding:9px;max-width:calc(100vw - 24px)}.choice-option{min-height:46px}.timezone-settings select,.batch-tools select{font-size:16px}}
+@media(prefers-reduced-motion:reduce){#content .domain-head,#content .record-flow,#content .raw,.lookup-desk,.batch-body .batch-card,.batch-body .batch-results{animation:none!important}.choice-chevron,.choice-option{transition:none}}
