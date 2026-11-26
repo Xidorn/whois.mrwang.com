@@ -26,7 +26,7 @@ const EXT_INPUT_LABELS={'zh-Hant':'網域名稱',"pt": "Nome de domínio", "it":
 function detectLang(){return detectWhoisLanguage()}
 let lang=detectLang(),currentData=null;const t=k=>(EXT_INPUT_LABELS[lang]&&k==='domainInputLabel'?EXT_INPUT_LABELS[lang]:({en:{domainInputLabel:'Domain name',rawWhois:"Raw WHOIS",rawRdap:"Raw RDAP"},zh:{domainInputLabel:'域名',rawWhois:"原始 WHOIS",rawRdap:"原始 RDAP"},de:{domainInputLabel:'Domainname',rawWhois:"WHOIS-Rohdaten",rawRdap:"RDAP-Rohdaten"},fr:{domainInputLabel:'Nom de domaine',rawWhois:"WHOIS brut",rawRdap:"RDAP brut"},ja:{domainInputLabel:'ドメイン名',rawWhois:"WHOIS 生データ",rawRdap:"RDAP 生データ"},es:{domainInputLabel:'Nombre de dominio',rawWhois:"WHOIS sin procesar",rawRdap:"RDAP sin procesar"},'zh-Hant':{domainInputLabel:'網域名稱',rawWhois:'原始 WHOIS',rawRdap:'原始 RDAP'}}[lang]?.[k]||LANGS[lang][k]||LANGS.en[k]||k));const sel=document.getElementById('langSelect');populateLanguageSelect(sel,LANGS);const GROUP_TITLES={'zh-Hant':['註冊與註冊商','DNS 與網域狀態'],en:['Registration & Registrar','DNS & Domain Status'],zh:['注册与注册商','DNS 与域名状态'],de:['Registrierung & Registrar','DNS & Domainstatus'],fr:['Enregistrement & bureau','DNS & statut du domaine'],ja:['登録・レジストラ','DNS・ドメイン状態'],es:['Registro y registrador','DNS y estado del dominio']};Object.assign(GROUP_TITLES,{"pt": ["Registro e registrador", "DNS e estado do domínio"], "it": ["Registrazione e registrar", "DNS e stato del dominio"], "ko": ["등록 및 등록기관", "DNS 및 도메인 상태"], "ru": ["Регистрация и регистратор", "DNS и статус домена"], "ar": ["التسجيل والمسجّل", "DNS وحالة النطاق"], "hi": ["पंजीकरण और रजिस्ट्रार", "DNS और डोमेन स्थिति"], "id": ["Pendaftaran dan registrar", "DNS dan status domain"]});
 function setResultTitle(name){document.title=name?name+' | '+BRAND_TITLES[lang]:BRAND_TITLES[lang]+' | Mr Wang'}
-function applyLang(){setResultTitle(domain);document.documentElement.lang=lang==='zh'?'zh-CN':(lang==='zh-Hant'?'zh-TW':lang);document.documentElement.dir=lang==='ar'?'rtl':'ltr';sel.value=lang;translateLanguageGroups(sel,lang);translateThemes();renderBrand(lang);document.getElementById('domainInput').setAttribute('aria-label',t('domainInputLabel'));document.querySelectorAll('[data-i18n]').forEach(el=>{const v=t(el.dataset.i18n);if(v)el.textContent=v});document.querySelector('[data-i18n=identityGroup]').textContent=(GROUP_TITLES[lang]||GROUP_TITLES.en)[0];document.querySelector('[data-i18n=technicalGroup]').textContent=(GROUP_TITLES[lang]||GROUP_TITLES.en)[1];if(currentData)render(currentData);window.renderPriceForLanguage?.()}sel.onchange=()=>{const code=normalizeWhoisLanguage(sel.value);if(!code)return;lang=code;if(!sel.dataset.syncingLanguage)saveWhoisLanguage(lang);applyLang()};bindWhoisLanguage(sel);
+function applyLang(){setResultTitle(domain);document.documentElement.lang=lang==='zh'?'zh-CN':(lang==='zh-Hant'?'zh-TW':lang);document.documentElement.dir=lang==='ar'?'rtl':'ltr';sel.value=lang;refreshWhoisNav(lang);translateThemes();renderBrand(lang);document.getElementById('domainInput').setAttribute('aria-label',t('domainInputLabel'));document.querySelectorAll('[data-i18n]').forEach(el=>{const v=t(el.dataset.i18n);if(v)el.textContent=v});document.querySelector('[data-i18n=identityGroup]').textContent=(GROUP_TITLES[lang]||GROUP_TITLES.en)[0];document.querySelector('[data-i18n=technicalGroup]').textContent=(GROUP_TITLES[lang]||GROUP_TITLES.en)[1];if(currentData)render(currentData);window.renderPriceForLanguage?.()}sel.onchange=()=>{const code=normalizeWhoisLanguage(sel.value);if(!code)return;lang=code;if(!sel.dataset.syncingLanguage)saveWhoisLanguage(lang);applyLang()};bindWhoisLanguage(sel);
 function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}function safeUrl(v){try{const u=new URL(v);return /^https?:$/.test(u.protocol)?u.href:''}catch{return''}}
 const routeName=location.pathname.replace(/\/+$/,'').split('/').pop();
 let routeDomain='';
@@ -178,7 +178,6 @@ async function load(){
  if(requestController)return;
  currentData=null;
  lifecycleRecord=null;
- try{applyLang()}catch(e){console.warn('Locale rendering:',e)}
  error.hidden=true;error.replaceChildren();content.hidden=true;loading.hidden=false;
  if(!domain||!validDomain(domain)){renderError(t('invalid'),false);return}
  const controller=new AbortController();requestController=controller;
@@ -187,8 +186,8 @@ async function load(){
   // One merged API request keeps status interpretation identical to the backend for every TLD.
   const payload=await WhoisLookup.query(domain,controller.signal);
   queryCompletedAt=new Date();
-  loading.hidden=true;error.hidden=true;error.replaceChildren();content.hidden=false;
-  try{render(payload);rememberLifecycle(payload)}catch(err){
+  error.hidden=true;error.replaceChildren();
+  try{render(payload);content.hidden=false;loading.hidden=true;rememberLifecycle(payload)}catch(err){
    console.error('Result rendering error',err);
    content.hidden=true;renderError(WhoisLookup.message({kind:'render'},lang));currentData=null;
   }
@@ -208,7 +207,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 else queueMicrotask(startResult);
 
 
-function renderHistory(){const panel=document.getElementById('historyPanel'),title=document.getElementById('historySummary'),list=document.getElementById('historyList');if(!panel||!title||!list)return;const arr=readHistory();title.textContent=htxt('history')+' ('+arr.length+')';list.replaceChildren();if(!arr.length){const empty=document.createElement('div');empty.className='history-empty';empty.textContent=htxt('empty');list.append(empty)}else arr.forEach(d=>{const row=document.createElement('div');row.className='history-row';const a=document.createElement('a');a.className='history-link';a.textContent=d;a.href=searchUrl(d);const del=document.createElement('button');del.type='button';del.className='history-remove';del.textContent='×';del.title=htxt('remove');del.setAttribute('aria-label',htxt('remove')+' '+d);del.addEventListener('click',()=>writeHistory(readHistory().filter(x=>x!==d)));row.append(a,del);list.append(row)});const note=document.getElementById('historyNote');if(note)note.textContent=htxt('saved');const all=document.getElementById('historyClear');if(all){all.textContent=htxt('clear');all.hidden=!arr.length}}
+var historyRenderSignature;
+function renderHistory(){const panel=document.getElementById('historyPanel'),title=document.getElementById('historySummary'),list=document.getElementById('historyList');if(!panel||!title||!list)return;const arr=readHistory();const signature=JSON.stringify([lang,arr]);if(signature===historyRenderSignature)return;historyRenderSignature=signature;title.textContent=htxt('history')+' ('+arr.length+')';list.replaceChildren();if(!arr.length){const empty=document.createElement('div');empty.className='history-empty';empty.textContent=htxt('empty');list.append(empty)}else arr.forEach(d=>{const row=document.createElement('div');row.className='history-row';const a=document.createElement('a');a.className='history-link';a.textContent=d;a.href=searchUrl(d);const del=document.createElement('button');del.type='button';del.className='history-remove';del.textContent='×';del.title=htxt('remove');del.setAttribute('aria-label',htxt('remove')+' '+d);del.addEventListener('click',()=>writeHistory(readHistory().filter(x=>x!==d)));row.append(a,del);list.append(row)});const note=document.getElementById('historyNote');if(note)note.textContent=htxt('saved');const all=document.getElementById('historyClear');if(all){all.textContent=htxt('clear');all.hidden=!arr.length}}
 function updateSearchControls(){const input=document.getElementById('domainInput');const btn=document.getElementById('clearInput');btn.hidden=!input.value;btn.title=htxt('clearInput');btn.setAttribute('aria-label',htxt('clearInput'));const submit=document.getElementById('searchSubmit');submit.title=htxt('searchIcon');submit.setAttribute('aria-label',htxt('searchIcon'));renderHistory();renderFavorites()}
 (function setupQueryTools(){const input=document.getElementById('domainInput');const clr=document.getElementById('clearInput');let returningHome=false;
 // A cleared detail-page search is a navigation to the real homepage, not an empty WHOIS query.
@@ -226,7 +226,7 @@ function returnHome(){
  location.replace(new URL('./',document.baseURI));
 }
 clr.onclick=()=>{input.value='';returnHome()};
-input.addEventListener('input',e=>{input.setCustomValidity('');if(!input.value.trim()&&!e.isComposing){returnHome();return}updateSearchControls()});
+input.addEventListener('input',e=>{input.setCustomValidity('');if(!input.value.trim()&&!e.isComposing){returnHome();return}clr.hidden=!input.value});
 input.addEventListener('compositionend',()=>{if(!input.value.trim())returnHome()});
 // Enter and mobile Search submit the same validated form as the search icon.
 // Do not query while an IME is committing Chinese, Japanese or Korean text.
@@ -278,22 +278,7 @@ window.addEventListener("whois-timezone-change",()=>{if(currentData){renderDates
 (()=>{
  const root=r=>typeof r==='string'?document.querySelector(r):(r||document);
  const $=(s,r=document)=>root(r)?.querySelector(s)||null, $$=(s,r=document)=>{const x=root(r);return x?[...x.querySelectorAll(s)]:[]};
- const navText={
-  en:{batch:'Batch',history:'History',favorites:'Saved',display:'Display',theme:'Theme',font:'Text size',close:'Close'},
-  zh:{batch:'批量查询',history:'查询历史',favorites:'收藏域名',display:'显示设置',theme:'风格',font:'文字大小',close:'关闭'},
-  'zh-Hant':{batch:'批次查詢',history:'查詢紀錄',favorites:'收藏網域',display:'顯示設定',theme:'風格',font:'文字大小',close:'關閉'},
-  de:{batch:'Stapel',history:'Verlauf',favorites:'Gespeichert',display:'Anzeige',theme:'Design',font:'Textgröße',close:'Schließen'},
-  fr:{batch:'Lot',history:'Historique',favorites:'Favoris',display:'Affichage',theme:'Thème',font:'Taille du texte',close:'Fermer'},
-  ja:{batch:'一括検索',history:'履歴',favorites:'保存済み',display:'表示',theme:'テーマ',font:'文字サイズ',close:'閉じる'},
-  es:{batch:'Lote',history:'Historial',favorites:'Guardados',display:'Pantalla',theme:'Tema',font:'Tamaño de texto',close:'Cerrar'},
-  pt:{batch:'Lote',history:'Histórico',favorites:'Salvos',display:'Exibição',theme:'Tema',font:'Tamanho do texto',close:'Fechar'},
-  it:{batch:'Batch',history:'Cronologia',favorites:'Salvati',display:'Aspetto',theme:'Tema',font:'Dimensione testo',close:'Chiudi'},
-  ko:{batch:'일괄 조회',history:'기록',favorites:'저장됨',display:'화면',theme:'테마',font:'글자 크기',close:'닫기'},
-  ru:{batch:'Пакетно',history:'История',favorites:'Избранное',display:'Вид',theme:'Тема',font:'Размер текста',close:'Закрыть'},
-  ar:{batch:'بحث جماعي',history:'السجل',favorites:'المحفوظات',display:'العرض',theme:'المظهر',font:'حجم النص',close:'إغلاق'},
-  hi:{batch:'बैच',history:'इतिहास',favorites:'सहेजे गए',display:'दिखावट',theme:'थीम',font:'पाठ आकार',close:'बंद करें'},
-  id:{batch:'Massal',history:'Riwayat',favorites:'Tersimpan',display:'Tampilan',theme:'Tema',font:'Ukuran teks',close:'Tutup'}
- };
+ const navText=WHOIS_NAV_TEXT;
  const themeColors={graphite:['#101318','#a2c9ca'],paper:['#f5f6f4','#346b79'],sand:['#f6f2eb','#9c6748'],forest:['#15201c','#bbd8ad'],ocean:['#edf3f6','#3e7996'],plum:['#f8f5f9','#78619c'],mono:['#fff','#202020'],slate:['#171d26','#91b5d5'],mint:['#f0f7f5','#4e9d83'],rose:['#faf5f4','#b67c90']};
  const lang=()=>$('#langSelect')?.value||'en', text=()=>navText[lang()]||navText.en;
  const popItems=$$('.nav-popover-item'), choices=$$('.nav-choice');
@@ -324,7 +309,7 @@ window.addEventListener("whois-timezone-change",()=>{if(currentData){renderDates
   b.addEventListener('click',()=>{window.applyWhoisTheme?.('paper',{persist:false});document.documentElement.dataset.fontSize='medium';try{localStorage.removeItem('whoisTheme');localStorage.removeItem('whoisFontSize')}catch{}window.WhoisTimezone?.reset?.();syncAll();sync()});
   new MutationObserver(sync).observe(document.documentElement,{attributes:true,attributeFilter:['lang','data-theme','data-font-size']});window.addEventListener('whois-timezone-change',sync);sync();
  }
- function syncAll(){syncLabels();syncThemeState();syncLanguageState();syncFont();window.updateLibraryCounts?.()}
+ function syncAll(){refreshWhoisNav($('#langSelect')?.value);syncThemeState();syncLanguageState();syncFont();window.updateLibraryCounts?.()}
  // Bind the four primary Menu controls first. A rendering error in one optional panel must never disable navigation.
  popItems.forEach(n=>{$('.nav-button',n)?.addEventListener('click',()=>{try{window.refreshLocalLibraryUI?.()}catch(e){console.warn('Library menu refresh failed',e)}toggle(n,'.nav-popover','.nav-button')});$('.popover-close',n)?.addEventListener('click',()=>{closeAll();$('.nav-button',n)?.focus()})});
  choices.forEach(n=>{$('.choice-trigger',n)?.addEventListener('click',()=>toggle(n,'.choice-panel','.choice-trigger'));$('.choice-close',n)?.addEventListener('click',()=>{closeAll();$('.choice-trigger',n)?.focus()})});

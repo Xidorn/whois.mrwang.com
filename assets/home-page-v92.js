@@ -12,14 +12,15 @@ LANGS['zh-Hant']={name:'繁體中文',title:'網域 WHOIS 查詢',desc:'查詢�
 function translateThemes(){const names=THEME_NAMES[lang]||THEME_NAMES.en;const s=document.getElementById("themeSelect");const selected=s.value;["graphite","paper","sand","forest","ocean","plum","mono","slate","mint","rose"].forEach((id,i)=>{const o=s.querySelector(`option[value="${id}"]`);if(o)o.textContent=names[i+1]});s.setAttribute("aria-label",names[0]);s.title=names[0];const box=s.closest(".picker");if(box)box.title=names[0];s.value=selected;}
 const DOMAIN_INPUT_LABELS={"en": "Domain name", "zh": "域名", "de": "Domainname", "fr": "Nom de domaine", "ja": "ドメイン名", "es": "Nombre de dominio", "pt": "Nome de domínio", "it": "Nome del dominio", "ko": "도메인 이름", "ru": "Доменное имя", "ar": "اسم النطاق", "hi": "डोमेन नाम", "id": "Nama domain", "zh-Hant":"網域名稱"};
 function detectLang(){return detectWhoisLanguage()}
-let lang=detectLang();const sel=document.getElementById('langSelect');populateLanguageSelect(sel,LANGS);function applyLang(){document.title=LANGS[lang].title+" | Mr Wang";document.documentElement.lang=lang==='zh'?'zh-CN':(lang==='zh-Hant'?'zh-TW':lang);document.documentElement.dir=lang==='ar'?'rtl':'ltr';sel.value=lang;translateLanguageGroups(sel,lang);translateThemes();renderBrand(lang);document.getElementById('domainInput').setAttribute('aria-label',(DOMAIN_INPUT_LABELS[lang]||'Domain name'));document.querySelectorAll('[data-i18n]').forEach(el=>{const v=LANGS[lang][el.dataset.i18n];if(v)el.textContent=v})}sel.onchange=()=>{const code=normalizeWhoisLanguage(sel.value);if(!code)return;lang=code;if(!sel.dataset.syncingLanguage)saveWhoisLanguage(lang);applyLang()};bindWhoisLanguage(sel);applyLang();document.getElementById('searchForm').onsubmit=e=>{e.preventDefault();const d=cleanDomain(document.getElementById('domainInput').value);if(d)location.href=searchUrl(d)};document.getElementById('year').textContent=new Date().getFullYear();
+let lang=detectLang();const sel=document.getElementById('langSelect');populateLanguageSelect(sel,LANGS);function applyLang(){document.title=LANGS[lang].title+" | Mr Wang";document.documentElement.lang=lang==='zh'?'zh-CN':(lang==='zh-Hant'?'zh-TW':lang);document.documentElement.dir=lang==='ar'?'rtl':'ltr';sel.value=lang;refreshWhoisNav(lang);translateThemes();renderBrand(lang);document.getElementById('domainInput').setAttribute('aria-label',(DOMAIN_INPUT_LABELS[lang]||'Domain name'));document.querySelectorAll('[data-i18n]').forEach(el=>{const v=LANGS[lang][el.dataset.i18n];if(v)el.textContent=v})}sel.onchange=()=>{const code=normalizeWhoisLanguage(sel.value);if(!code)return;lang=code;if(!sel.dataset.syncingLanguage)saveWhoisLanguage(lang);applyLang()};bindWhoisLanguage(sel);applyLang();document.getElementById('searchForm').onsubmit=e=>{e.preventDefault();const d=cleanDomain(document.getElementById('domainInput').value);if(d)location.href=searchUrl(d)};document.getElementById('year').textContent=new Date().getFullYear();
 
 initThemePicker();
 
 const DOMAIN_INVALID={en:'Enter a valid domain name.',zh:'请输入有效域名。','zh-Hant':'請輸入有效網域名稱。',de:'Bitte gültige Domain eingeben.',fr:'Saisissez un domaine valide.',ja:'有効なドメインを入力してください。',es:'Introduce un dominio válido.',pt:'Insira um domínio válido.',it:'Inserisci un dominio valido.',ko:'올바른 도메인을 입력하세요.',ru:'Введите допустимый домен.',ar:'أدخل اسم نطاق صالحًا.',hi:'मान्य डोमेन दर्ज करें।',id:'Masukkan domain yang valid.'};
-function renderHistory(){const panel=document.getElementById('historyPanel'),title=document.getElementById('historySummary'),list=document.getElementById('historyList');if(!panel||!title||!list)return;const arr=readHistory();title.textContent=htxt('history')+' ('+arr.length+')';list.replaceChildren();if(!arr.length){const empty=document.createElement('div');empty.className='history-empty';empty.textContent=htxt('empty');list.append(empty)}else arr.forEach(d=>{const row=document.createElement('div');row.className='history-row';const a=document.createElement('a');a.className='history-link';a.textContent=d;a.href=searchUrl(d);const del=document.createElement('button');del.type='button';del.className='history-remove';del.textContent='×';del.title=htxt('remove');del.setAttribute('aria-label',htxt('remove')+' '+d);del.addEventListener('click',()=>writeHistory(readHistory().filter(x=>x!==d)));row.append(a,del);list.append(row)});const note=document.getElementById('historyNote');if(note)note.textContent=htxt('saved');const all=document.getElementById('historyClear');if(all){all.textContent=htxt('clear');all.hidden=!arr.length}}
+var historyRenderSignature;
+function renderHistory(){const panel=document.getElementById('historyPanel'),title=document.getElementById('historySummary'),list=document.getElementById('historyList');if(!panel||!title||!list)return;const arr=readHistory();const signature=JSON.stringify([lang,arr]);if(signature===historyRenderSignature)return;historyRenderSignature=signature;title.textContent=htxt('history')+' ('+arr.length+')';list.replaceChildren();if(!arr.length){const empty=document.createElement('div');empty.className='history-empty';empty.textContent=htxt('empty');list.append(empty)}else arr.forEach(d=>{const row=document.createElement('div');row.className='history-row';const a=document.createElement('a');a.className='history-link';a.textContent=d;a.href=searchUrl(d);const del=document.createElement('button');del.type='button';del.className='history-remove';del.textContent='×';del.title=htxt('remove');del.setAttribute('aria-label',htxt('remove')+' '+d);del.addEventListener('click',()=>writeHistory(readHistory().filter(x=>x!==d)));row.append(a,del);list.append(row)});const note=document.getElementById('historyNote');if(note)note.textContent=htxt('saved');const all=document.getElementById('historyClear');if(all){all.textContent=htxt('clear');all.hidden=!arr.length}}
 function updateSearchControls(){const input=document.getElementById('domainInput');const btn=document.getElementById('clearInput');btn.hidden=!input.value;btn.title=htxt('clearInput');btn.setAttribute('aria-label',htxt('clearInput'));const submit=document.getElementById('searchSubmit');submit.title=htxt('searchIcon');submit.setAttribute('aria-label',htxt('searchIcon'));renderHistory();renderFavorites()}
-(function setupQueryTools(){const input=document.getElementById('domainInput');const clr=document.getElementById('clearInput');clr.onclick=()=>{input.value='';input.focus();updateSearchControls()};input.addEventListener('input',()=>{input.setCustomValidity('');updateSearchControls()});
+(function setupQueryTools(){const input=document.getElementById('domainInput');const clr=document.getElementById('clearInput');clr.onclick=()=>{input.value='';input.focus();updateSearchControls()};input.addEventListener('input',()=>{input.setCustomValidity('');clr.hidden=!input.value});
 // Enter and mobile Search submit the same validated form as the search icon.
 // Do not query while an IME is committing Chinese, Japanese or Korean text.
 input.addEventListener('keydown',e=>{
@@ -33,22 +34,7 @@ input.addEventListener('keydown',e=>{
 (()=>{
  const root=r=>typeof r==='string'?document.querySelector(r):(r||document);
  const $=(s,r=document)=>root(r)?.querySelector(s)||null, $$=(s,r=document)=>{const x=root(r);return x?[...x.querySelectorAll(s)]:[]};
- const navText={
-  en:{batch:'Batch',history:'History',favorites:'Saved',display:'Display',theme:'Theme',font:'Text size',close:'Close'},
-  zh:{batch:'批量查询',history:'查询历史',favorites:'收藏域名',display:'显示设置',theme:'风格',font:'文字大小',close:'关闭'},
-  'zh-Hant':{batch:'批次查詢',history:'查詢紀錄',favorites:'收藏網域',display:'顯示設定',theme:'風格',font:'文字大小',close:'關閉'},
-  de:{batch:'Stapel',history:'Verlauf',favorites:'Gespeichert',display:'Anzeige',theme:'Design',font:'Textgröße',close:'Schließen'},
-  fr:{batch:'Lot',history:'Historique',favorites:'Favoris',display:'Affichage',theme:'Thème',font:'Taille du texte',close:'Fermer'},
-  ja:{batch:'一括検索',history:'履歴',favorites:'保存済み',display:'表示',theme:'テーマ',font:'文字サイズ',close:'閉じる'},
-  es:{batch:'Lote',history:'Historial',favorites:'Guardados',display:'Pantalla',theme:'Tema',font:'Tamaño de texto',close:'Cerrar'},
-  pt:{batch:'Lote',history:'Histórico',favorites:'Salvos',display:'Exibição',theme:'Tema',font:'Tamanho do texto',close:'Fechar'},
-  it:{batch:'Batch',history:'Cronologia',favorites:'Salvati',display:'Aspetto',theme:'Tema',font:'Dimensione testo',close:'Chiudi'},
-  ko:{batch:'일괄 조회',history:'기록',favorites:'저장됨',display:'화면',theme:'테마',font:'글자 크기',close:'닫기'},
-  ru:{batch:'Пакетно',history:'История',favorites:'Избранное',display:'Вид',theme:'Тема',font:'Размер текста',close:'Закрыть'},
-  ar:{batch:'بحث جماعي',history:'السجل',favorites:'المحفوظات',display:'العرض',theme:'المظهر',font:'حجم النص',close:'إغلاق'},
-  hi:{batch:'बैच',history:'इतिहास',favorites:'सहेजे गए',display:'दिखावट',theme:'थीम',font:'पाठ आकार',close:'बंद करें'},
-  id:{batch:'Massal',history:'Riwayat',favorites:'Tersimpan',display:'Tampilan',theme:'Tema',font:'Ukuran teks',close:'Tutup'}
- };
+ const navText=WHOIS_NAV_TEXT;
  const themeColors={graphite:['#101318','#a2c9ca'],paper:['#f5f6f4','#346b79'],sand:['#f6f2eb','#9c6748'],forest:['#15201c','#bbd8ad'],ocean:['#edf3f6','#3e7996'],plum:['#f8f5f9','#78619c'],mono:['#fff','#202020'],slate:['#171d26','#91b5d5'],mint:['#f0f7f5','#4e9d83'],rose:['#faf5f4','#b67c90']};
  const lang=()=>$('#langSelect')?.value||'en', text=()=>navText[lang()]||navText.en;
  const popItems=$$('.nav-popover-item'), choices=$$('.nav-choice');
@@ -79,7 +65,7 @@ input.addEventListener('keydown',e=>{
   b.addEventListener('click',()=>{window.applyWhoisTheme?.('paper',{persist:false});document.documentElement.dataset.fontSize='medium';try{localStorage.removeItem('whoisTheme');localStorage.removeItem('whoisFontSize')}catch{}window.WhoisTimezone?.reset?.();syncAll();sync()});
   new MutationObserver(sync).observe(document.documentElement,{attributes:true,attributeFilter:['lang','data-theme','data-font-size']});window.addEventListener('whois-timezone-change',sync);sync();
  }
- function syncAll(){syncLabels();syncThemeState();syncLanguageState();syncFont();window.updateLibraryCounts?.()}
+ function syncAll(){refreshWhoisNav($('#langSelect')?.value);syncThemeState();syncLanguageState();syncFont();window.updateLibraryCounts?.()}
  // Bind the four primary Menu controls first. A rendering error in one optional panel must never disable navigation.
  popItems.forEach(n=>{$('.nav-button',n)?.addEventListener('click',()=>{try{window.refreshLocalLibraryUI?.()}catch(e){console.warn('Library menu refresh failed',e)}toggle(n,'.nav-popover','.nav-button')});$('.popover-close',n)?.addEventListener('click',()=>{closeAll();$('.nav-button',n)?.focus()})});
  choices.forEach(n=>{$('.choice-trigger',n)?.addEventListener('click',()=>toggle(n,'.choice-panel','.choice-trigger'));$('.choice-close',n)?.addEventListener('click',()=>{closeAll();$('.choice-trigger',n)?.focus()})});
@@ -110,11 +96,13 @@ input.addEventListener('keydown',e=>{
         list.style.removeProperty('max-height');
       }
     }
+    let deskSignature;
     function showDomains() {
       const saved = selected === 'saved';
       const history = readHistory();
       const favorites = getFavorites();
       const domains = saved ? favorites : history;
+      const signature=JSON.stringify([lang,selected,history,favorites]);if(signature===deskSignature)return;deskSignature=signature;
       for (const button of buttons) {
         const isHistory = button.dataset.desk === 'history';
         const count = document.createElement('span');

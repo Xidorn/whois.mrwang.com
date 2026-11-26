@@ -11,9 +11,10 @@ const sel=document.getElementById('langSelect');populateLanguageSelect(sel,LANGS
 const $=id=>document.getElementById(id);
 function translateThemeOptions(){const names=THEME_NAMES[lang]||THEME_NAMES.en,select=$('themeSelect');if(!select)return;const ids=['graphite','paper','sand','forest','ocean','plum','mono','slate','mint','rose'];ids.forEach((id,i)=>{const o=select.querySelector('option[value="'+id+'"]');if(o)o.textContent=names[i+1]||o.textContent});select.setAttribute('aria-label',names[0]||'Theme')}
 const batchTitles={en:'Batch Domain Lookup',zh:'批量域名查询','zh-Hant':'批次網域查詢',de:'Mehrere Domains abfragen',fr:'Recherche groupée de domaines',ja:'ドメイン一括検索',es:'Consulta de dominios por lotes',pt:'Consulta de domínios em lote',it:'Ricerca multipla di domini',ko:'도메인 일괄 조회',ru:'Пакетный поиск доменов',ar:'بحث جماعي عن النطاقات',hi:'एक साथ कई डोमेन खोजें',id:'Pencarian domain massal'};
-function applyLang(){document.title=batchTitles[lang]+' | Mr Wang';const c=COPY[lang]||COPY.en;document.documentElement.lang=lang==='zh'?'zh-CN':lang==='zh-Hant'?'zh-TW':lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';sel.value=lang;translateLanguageGroups(sel,lang);translateThemeOptions();renderBrand(lang);[['batchKicker',0],['batchTitle',1],['batchDesc',2],['batchInputLabel',3],['batchHint',4],['batchClear',5],['batchSubmit',6],['batchResultsTitle',7],['suffixLabel',13],['suffixCommon',16],['suffixClear',17],['suffixHelp',19]].forEach(([id,i])=>{const e=$(id);if(e)e.textContent=id==='batchTitle'?batchTitles[lang]:c[i]});$('suffixSearch').placeholder=c[18];$('suffixSearch').setAttribute('aria-label',c[18]);updateSuffixStatus();renderHistory();renderFavorites()}
+function applyLang(){document.title=batchTitles[lang]+' | Mr Wang';const c=COPY[lang]||COPY.en;document.documentElement.lang=lang==='zh'?'zh-CN':lang==='zh-Hant'?'zh-TW':lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';sel.value=lang;refreshWhoisNav(lang);translateThemeOptions();renderBrand(lang);[['batchKicker',0],['batchTitle',1],['batchDesc',2],['batchInputLabel',3],['batchHint',4],['batchClear',5],['batchSubmit',6],['batchResultsTitle',7],['suffixLabel',13],['suffixCommon',16],['suffixClear',17],['suffixHelp',19]].forEach(([id,i])=>{const e=$(id);if(e)e.textContent=id==='batchTitle'?batchTitles[lang]:c[i]});$('suffixSearch').placeholder=c[18];$('suffixSearch').setAttribute('aria-label',c[18]);updateSuffixStatus();renderHistory();renderFavorites()}
 sel.onchange=()=>{const code=normalizeWhoisLanguage(sel.value);if(!code)return;lang=code;if(!sel.dataset.syncingLanguage)saveWhoisLanguage(lang);applyLang()};bindWhoisLanguage(sel);
-function renderHistory(){const arr=readHistory(),title=$('historySummary'),list=$('historyList');if(!title||!list)return;title.textContent=htxt('history')+' ('+arr.length+')';list.replaceChildren();if(!arr.length){const e=document.createElement('div');e.className='history-empty';e.textContent=htxt('empty');list.append(e)}else arr.forEach(d=>{const row=document.createElement('div');row.className='history-row',a=document.createElement('a'),del=document.createElement('button');a.className='history-link';a.textContent=d;a.href=searchUrl(d);del.type='button';del.className='history-remove';del.textContent='×';del.setAttribute('aria-label',htxt('remove')+' '+d);del.onclick=()=>writeHistory(readHistory().filter(x=>x!==d));row.append(a,del);list.append(row)});const note=$('historyNote');if(note)note.textContent=htxt('saved');const b=$('historyClear');if(b){b.textContent=htxt('clear');b.hidden=!arr.length;b.onclick=()=>writeHistory([])}}
+var historyRenderSignature;
+function renderHistory(){const arr=readHistory(),title=$('historySummary'),list=$('historyList');if(!title||!list)return;const signature=JSON.stringify([lang,arr]);if(signature===historyRenderSignature)return;historyRenderSignature=signature;title.textContent=htxt('history')+' ('+arr.length+')';list.replaceChildren();if(!arr.length){const e=document.createElement('div');e.className='history-empty';e.textContent=htxt('empty');list.append(e)}else arr.forEach(d=>{const row=document.createElement('div');row.className='history-row';const a=document.createElement('a'),del=document.createElement('button');a.className='history-link';a.textContent=d;a.href=searchUrl(d);del.type='button';del.className='history-remove';del.textContent='×';del.setAttribute('aria-label',htxt('remove')+' '+d);del.onclick=()=>writeHistory(readHistory().filter(x=>x!==d));row.append(a,del);list.append(row)});const note=$('historyNote');if(note)note.textContent=htxt('saved');const b=$('historyClear');if(b){b.textContent=htxt('clear');b.hidden=!arr.length;b.onclick=()=>writeHistory([])}}
 const textarea=$('batchDomains'),submit=$('batchSubmit'),clear=$('batchClear'),results=$('batchResults'),list=$('batchResultList'),progress=$('batchProgress'),suffixList=$('suffixList'),suffixSearch=$('suffixSearch');
 clear.onclick=()=>{textarea.value='';list.replaceChildren();batchRows=[];filter.value='';results.hidden=true;updateBatchPreview();textarea.focus()};
 async function loadSuffixes(){
@@ -231,22 +232,7 @@ controls();
 (()=>{
  const root=r=>typeof r==='string'?document.querySelector(r):(r||document);
  const $=(s,r=document)=>root(r)?.querySelector(s)||null, $$=(s,r=document)=>{const x=root(r);return x?[...x.querySelectorAll(s)]:[]};
- const navText={
-  en:{batch:'Batch',history:'History',favorites:'Saved',display:'Display',theme:'Theme',font:'Text size',close:'Close'},
-  zh:{batch:'批量查询',history:'查询历史',favorites:'收藏域名',display:'显示设置',theme:'风格',font:'文字大小',close:'关闭'},
-  'zh-Hant':{batch:'批次查詢',history:'查詢紀錄',favorites:'收藏網域',display:'顯示設定',theme:'風格',font:'文字大小',close:'關閉'},
-  de:{batch:'Stapel',history:'Verlauf',favorites:'Gespeichert',display:'Anzeige',theme:'Design',font:'Textgröße',close:'Schließen'},
-  fr:{batch:'Lot',history:'Historique',favorites:'Favoris',display:'Affichage',theme:'Thème',font:'Taille du texte',close:'Fermer'},
-  ja:{batch:'一括検索',history:'履歴',favorites:'保存済み',display:'表示',theme:'テーマ',font:'文字サイズ',close:'閉じる'},
-  es:{batch:'Lote',history:'Historial',favorites:'Guardados',display:'Pantalla',theme:'Tema',font:'Tamaño de texto',close:'Cerrar'},
-  pt:{batch:'Lote',history:'Histórico',favorites:'Salvos',display:'Exibição',theme:'Tema',font:'Tamanho do texto',close:'Fechar'},
-  it:{batch:'Batch',history:'Cronologia',favorites:'Salvati',display:'Aspetto',theme:'Tema',font:'Dimensione testo',close:'Chiudi'},
-  ko:{batch:'일괄 조회',history:'기록',favorites:'저장됨',display:'화면',theme:'테마',font:'글자 크기',close:'닫기'},
-  ru:{batch:'Пакетно',history:'История',favorites:'Избранное',display:'Вид',theme:'Тема',font:'Размер текста',close:'Закрыть'},
-  ar:{batch:'بحث جماعي',history:'السجل',favorites:'المحفوظات',display:'العرض',theme:'المظهر',font:'حجم النص',close:'إغلاق'},
-  hi:{batch:'बैच',history:'इतिहास',favorites:'सहेजे गए',display:'दिखावट',theme:'थीम',font:'पाठ आकार',close:'बंद करें'},
-  id:{batch:'Massal',history:'Riwayat',favorites:'Tersimpan',display:'Tampilan',theme:'Tema',font:'Ukuran teks',close:'Tutup'}
- };
+ const navText=WHOIS_NAV_TEXT;
  const themeColors={graphite:['#101318','#a2c9ca'],paper:['#f5f6f4','#346b79'],sand:['#f6f2eb','#9c6748'],forest:['#15201c','#bbd8ad'],ocean:['#edf3f6','#3e7996'],plum:['#f8f5f9','#78619c'],mono:['#fff','#202020'],slate:['#171d26','#91b5d5'],mint:['#f0f7f5','#4e9d83'],rose:['#faf5f4','#b67c90']};
  const lang=()=>$('#langSelect')?.value||'en', text=()=>navText[lang()]||navText.en;
  const popItems=$$('.nav-popover-item'), choices=$$('.nav-choice');
@@ -277,7 +263,7 @@ controls();
   b.addEventListener('click',()=>{window.applyWhoisTheme?.('paper',{persist:false});document.documentElement.dataset.fontSize='medium';try{localStorage.removeItem('whoisTheme');localStorage.removeItem('whoisFontSize')}catch{}window.WhoisTimezone?.reset?.();syncAll();sync()});
   new MutationObserver(sync).observe(document.documentElement,{attributes:true,attributeFilter:['lang','data-theme','data-font-size']});window.addEventListener('whois-timezone-change',sync);sync();
  }
- function syncAll(){syncLabels();syncThemeState();syncLanguageState();syncFont();window.updateLibraryCounts?.()}
+ function syncAll(){refreshWhoisNav($('#langSelect')?.value);syncThemeState();syncLanguageState();syncFont();window.updateLibraryCounts?.()}
  // Bind the four primary Menu controls first. A rendering error in one optional panel must never disable navigation.
  popItems.forEach(n=>{$('.nav-button',n)?.addEventListener('click',()=>{try{window.refreshLocalLibraryUI?.()}catch(e){console.warn('Library menu refresh failed',e)}toggle(n,'.nav-popover','.nav-button')});$('.popover-close',n)?.addEventListener('click',()=>{closeAll();$('.nav-button',n)?.focus()})});
  choices.forEach(n=>{$('.choice-trigger',n)?.addEventListener('click',()=>toggle(n,'.choice-panel','.choice-trigger'));$('.choice-close',n)?.addEventListener('click',()=>{closeAll();$('.choice-trigger',n)?.focus()})});

@@ -20,7 +20,7 @@
  window.WhoisTimezone={format,zone,day};
  const labels={zh:['时区','跟随系统','自动保存于此浏览器','恢复默认'],'zh-Hant':['時區','跟隨系統','自動儲存於此瀏覽器','恢復預設'],en:['Time zone','System time zone','Automatically saved in this browser','Reset'],ja:['タイムゾーン','システム設定','ブラウザーに自動保存','リセット'],de:['Zeitzone','Systemzeitzone','Im Browser gespeichert','Zurücksetzen'],fr:['Fuseau horaire','Fuseau système','Enregistré dans le navigateur','Réinitialiser'],es:['Zona horaria','Zona del sistema','Guardado en el navegador','Restablecer'],pt:['Fuso horário','Fuso do sistema','Salvo no navegador','Redefinir'],it:['Fuso orario','Fuso di sistema','Salvato nel browser','Ripristina'],ko:['시간대','시스템 시간대','브라우저에 자동 저장','초기화'],ru:['Часовой пояс','Системный часовой пояс','Сохранено в браузере','Сбросить'],ar:['المنطقة الزمنية','توقيت النظام','حفظ تلقائي في المتصفح','إعادة ضبط'],hi:['समय क्षेत्र','सिस्टम समय क्षेत्र','ब्राउज़र में स्वतः सहेजा गया','रीसेट'],id:['Zona waktu','Zona sistem','Disimpan di browser','Atur ulang']};
  const common=['UTC','Asia/Shanghai','Asia/Hong_Kong','Asia/Taipei','Asia/Tokyo','Asia/Singapore','Asia/Kolkata','Europe/London','Europe/Paris','America/New_York','America/Los_Angeles','Australia/Sydney'];
- function mount(){const panel=document.getElementById('choice-display-panel');if(!panel)return;const section=document.createElement('div');section.className='settings-section timezone-settings';section.innerHTML='<label class="settings-label" for="timezoneSelect"></label><select id="timezoneSelect"></select><div class="timezone-foot"><small></small></div>';panel.insertBefore(section,panel.querySelector('.display-footer'));const select=section.querySelector('select'),label=section.querySelector('label'),note=section.querySelector('small');let all=[];try{all=Intl.supportedValuesOf?.('timeZone')||[]}catch{}const zones=[...new Set([...common,zone(),...all.sort(),...(selected==='auto'?[]:[selected])])].filter(valid);select.add(new Option('', 'auto'));for(const z of zones)select.add(new Option(z,z));function sync(){const l=document.documentElement.lang;const a=labels[l==='zh-CN'?'zh':l==='zh-TW'?'zh-Hant':l]||labels.en;label.textContent=a[0];select.options[0].textContent=a[1]+' ('+(Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC')+')';note.textContent=a[2];select.value=selected}function change(v){if(v!=='auto'&&!valid(v))return;selected=v;let saved=true;try{v==='auto'?localStorage.removeItem(key):localStorage.setItem(key,v)}catch{saved=false}sync();if(!saved)note.textContent='Session only';window.dispatchEvent(new Event('whois-timezone-change'))}select.onchange=()=>change(select.value);window.WhoisTimezone.reset=()=>change('auto');window.WhoisTimezone.preference=()=>selected;window.WhoisTimezone.resetLabel=()=>{const l=document.documentElement.lang;return (labels[l==='zh-CN'?'zh':l==='zh-TW'?'zh-Hant':l]||labels.en)[3]};new MutationObserver(sync).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});window.addEventListener('storage',e=>{if(e.key===key||e.key===null){selected=e.key===key&&e.newValue&&valid(e.newValue)?e.newValue:'auto';if(selected!=='auto'&&![...select.options].some(o=>o.value===selected))select.add(new Option(selected,selected));sync();window.dispatchEvent(new Event('whois-timezone-change'))}});sync()}
+ function mount(){const panel=document.getElementById('choice-display-panel');if(!panel)return;const section=document.createElement('div');section.className='settings-section timezone-settings';section.innerHTML='<label class="settings-label" for="timezoneSelect"></label><select id="timezoneSelect"></select><div class="timezone-foot"><small></small></div>';panel.insertBefore(section,panel.querySelector('.display-footer'));const select=section.querySelector('select'),label=section.querySelector('label'),note=section.querySelector('small');const zones=[...new Set([...common,zone(),...(selected==='auto'?[]:[selected])])].filter(valid);select.add(new Option('', 'auto'));for(const z of zones)select.add(new Option(z,z));let expanded=false;function expandZones(){if(expanded)return;expanded=true;let all=[];try{all=Intl.supportedValuesOf?.('timeZone')||[]}catch{}const existing=new Set(Array.from(select.options,o=>o.value));const fragment=document.createDocumentFragment();for(const z of all.sort()){if(!existing.has(z))fragment.append(new Option(z,z))}select.append(fragment);select.value=selected}select.addEventListener('focus',expandZones,{once:true});select.addEventListener('pointerdown',expandZones,{once:true});function sync(){const l=document.documentElement.lang;const a=labels[l==='zh-CN'?'zh':l==='zh-TW'?'zh-Hant':l]||labels.en;label.textContent=a[0];select.options[0].textContent=a[1]+' ('+(Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC')+')';note.textContent=a[2];select.value=selected}function change(v){if(v!=='auto'&&!valid(v))return;selected=v;let saved=true;try{v==='auto'?localStorage.removeItem(key):localStorage.setItem(key,v)}catch{saved=false}sync();if(!saved)note.textContent='Session only';window.dispatchEvent(new Event('whois-timezone-change'))}select.onchange=()=>change(select.value);window.WhoisTimezone.reset=()=>change('auto');window.WhoisTimezone.preference=()=>selected;window.WhoisTimezone.resetLabel=()=>{const l=document.documentElement.lang;return (labels[l==='zh-CN'?'zh':l==='zh-TW'?'zh-Hant':l]||labels.en)[3]};new MutationObserver(sync).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});window.addEventListener('storage',e=>{if(e.key===key||e.key===null){selected=e.key===key&&e.newValue&&valid(e.newValue)?e.newValue:'auto';if(selected!=='auto'&&![...select.options].some(o=>o.value===selected))select.add(new Option(selected,selected));sync();window.dispatchEvent(new Event('whois-timezone-change'))}});sync()}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);else mount();
 })();
 
@@ -156,8 +156,10 @@ function toggleFavorite(domain){const d=cleanDomain(domain),a=getFavorites();if(
 const EXTRA_TEXT={"en":["Save domain","Remove from saved","Export TXT","Export JSON","Query time","Data source","Saved domains","No saved domains","Remove","Local to this browser","Saved","Removed"],"zh":["收藏域名","取消收藏","导出 TXT","导出 JSON","查询时间","数据来源","我的收藏","暂无收藏域名","删除","仅保存在当前浏览器","已收藏","已取消收藏"],"zh-Hant":["收藏網域","取消收藏","匯出 TXT","匯出 JSON","查詢時間","資料來源","我的收藏","暫無收藏網域","刪除","僅儲存在目前瀏覽器","已收藏","已取消收藏"],"de":["Domain speichern","Aus Favoriten entfernen","TXT exportieren","JSON exportieren","Abfragezeit","Datenquelle","Gespeicherte Domains","Keine gespeicherten Domains","Entfernen","Nur in diesem Browser","Gespeichert","Entfernt"],"fr":["Enregistrer le domaine","Retirer des favoris","Exporter TXT","Exporter JSON","Heure de recherche","Source des données","Domaines favoris","Aucun domaine favori","Supprimer","Stocké dans ce navigateur","Enregistré","Supprimé"],"ja":["ドメインを保存","お気に入りから削除","TXTを書き出す","JSONを書き出す","照会時刻","データ取得元","保存したドメイン","保存したドメインはありません","削除","このブラウザー内のみ","保存しました","削除しました"],"es":["Guardar dominio","Quitar favorito","Exportar TXT","Exportar JSON","Hora de consulta","Fuente de datos","Dominios guardados","Sin dominios guardados","Eliminar","Solo en este navegador","Guardado","Eliminado"],"pt":["Salvar domínio","Remover favorito","Exportar TXT","Exportar JSON","Hora da consulta","Fonte dos dados","Domínios salvos","Nenhum domínio salvo","Remover","Somente neste navegador","Salvo","Removido"],"it":["Salva dominio","Rimuovi dai preferiti","Esporta TXT","Esporta JSON","Ora della ricerca","Fonte dei dati","Domini salvati","Nessun dominio salvato","Rimuovi","Solo in questo browser","Salvato","Rimosso"],"ko":["도메인 저장","즐겨찾기 해제","TXT 내보내기","JSON 내보내기","조회 시각","데이터 출처","저장한 도메인","저장한 도메인 없음","삭제","이 브라우저에만 저장","저장됨","삭제됨"],"ru":["Сохранить домен","Удалить из избранного","Экспорт TXT","Экспорт JSON","Время запроса","Источник данных","Избранные домены","Нет избранных доменов","Удалить","Только в этом браузере","Сохранено","Удалено"],"ar":["حفظ النطاق","إزالة من المحفوظات","تصدير TXT","تصدير JSON","وقت الاستعلام","مصدر البيانات","النطاقات المحفوظة","لا توجد نطاقات محفوظة","إزالة","محفوظ في هذا المتصفح فقط","تم الحفظ","تمت الإزالة"],"hi":["डोमेन सहेजें","सहेजा हुआ हटाएँ","TXT निर्यात","JSON निर्यात","खोज का समय","डेटा स्रोत","सहेजे गए डोमेन","कोई सहेजा डोमेन नहीं","हटाएँ","सिर्फ इस ब्राउज़र में","सहेजा गया","हटाया गया"],"id":["Simpan domain","Hapus dari favorit","Ekspor TXT","Ekspor JSON","Waktu pencarian","Sumber data","Domain tersimpan","Belum ada domain tersimpan","Hapus","Hanya di peramban ini","Tersimpan","Dihapus"]};
 function xt(n){return (EXTRA_TEXT[lang]||EXTRA_TEXT.en)[n]}
 
+let favoritesRenderSignature;
 function renderFavorites(){const panel=document.getElementById('favoritesPanel');if(!panel)return;
  const domains=getFavorites(),title=document.getElementById('favoritesSummary'),list=document.getElementById('favoritesList');
+ const signature=JSON.stringify([lang,domains]);if(signature===favoritesRenderSignature)return;favoritesRenderSignature=signature;
  title.textContent=xt(6)+' ('+domains.length+')';list.replaceChildren();const clearBtn=document.getElementById('favoritesClear');if(clearBtn){clearBtn.textContent=FAVORITES_CLEAR[lang]||FAVORITES_CLEAR.en;clearBtn.hidden=!domains.length;clearBtn.onclick=()=>{setFavorites([]);renderFavorites();if(typeof updateResultTools==='function'&&typeof currentData!=='undefined'&&currentData)updateResultTools()};}
  if(!domains.length){const empty=document.createElement('div');empty.className='history-empty';empty.textContent=xt(7);list.append(empty);return}
  domains.forEach(d=>{const row=document.createElement('div');row.className='history-row';const a=document.createElement('a');a.className='history-link';a.href=searchUrl(d);a.textContent=d;
@@ -193,18 +195,19 @@ function normalizeWhoisLanguage(value){
  return Object.prototype.hasOwnProperty.call(LANGUAGE_GROUPS,code)?code:'';
 }
 function readWhoisLanguage(){
- try{return normalizeWhoisLanguage(localStorage.getItem('whoisLang'))}catch{
-  try{return normalizeWhoisLanguage(document.cookie.match(/(?:^|;\s*)whoisLang=([^;]*)/)?.[1])}catch{return ''}
- }
+ try{const saved=normalizeWhoisLanguage(localStorage.getItem('whoisLang'));if(saved)return saved}catch{}
+ try{return normalizeWhoisLanguage(document.cookie.match(/(?:^|;\s*)whoisLang=([^;]*)/)?.[1])}catch{return ''}
 }
 function saveWhoisLanguage(code){
  code=normalizeWhoisLanguage(code);if(!code)return;
- try{localStorage.setItem('whoisLang',code)}catch{
+ try{localStorage.setItem('whoisLang',code);document.cookie='whoisLang=; Path=/; Max-Age=0; SameSite=Lax'}catch{
   try{document.cookie='whoisLang='+code+'; Path=/; Max-Age=31536000; SameSite=Lax'+(location.protocol==='https:'?'; Secure':'')}catch{}
  }
 }
 function detectWhoisLanguage(){return readWhoisLanguage()||normalizeWhoisLanguage(navigator.language)||'en'}
 function bindWhoisLanguage(select){
+ select.addEventListener('change',()=>refreshWhoisNav(select.value),true);
+ document.addEventListener('DOMContentLoaded',()=>refreshWhoisNav(select.value),{once:true});
  const sync=()=>{const code=detectWhoisLanguage();if(code!==select.value){select.value=code;select.dataset.syncingLanguage='1';try{select.dispatchEvent(new Event('change',{bubbles:true}))}finally{delete select.dataset.syncingLanguage}}};
  window.addEventListener('storage',e=>{if(e.key==='whoisLang'||e.key===null)sync()});
  window.addEventListener('pageshow',()=>sync());
@@ -269,3 +272,32 @@ window.refreshLocalLibraryUI=refreshLocalLibraryUI;
 window.addEventListener('storage',event=>{if(event.key===HISTORY_KEY||event.key===FAVORITES_KEY||event.key===null)refreshLocalLibraryUI()});
 document.addEventListener('DOMContentLoaded',updateLibraryCounts);
 
+
+const WHOIS_NAV_TEXT={
+  en:{batch:'Batch',history:'History',favorites:'Saved',display:'Display',theme:'Theme',font:'Text size',close:'Close'},
+  zh:{batch:'批量查询',history:'查询历史',favorites:'收藏域名',display:'显示设置',theme:'风格',font:'文字大小',close:'关闭'},
+  'zh-Hant':{batch:'批次查詢',history:'查詢紀錄',favorites:'收藏網域',display:'顯示設定',theme:'風格',font:'文字大小',close:'關閉'},
+  de:{batch:'Stapel',history:'Verlauf',favorites:'Gespeichert',display:'Anzeige',theme:'Design',font:'Textgröße',close:'Schließen'},
+  fr:{batch:'Lot',history:'Historique',favorites:'Favoris',display:'Affichage',theme:'Thème',font:'Taille du texte',close:'Fermer'},
+  ja:{batch:'一括検索',history:'履歴',favorites:'保存済み',display:'表示',theme:'テーマ',font:'文字サイズ',close:'閉じる'},
+  es:{batch:'Lote',history:'Historial',favorites:'Guardados',display:'Pantalla',theme:'Tema',font:'Tamaño de texto',close:'Cerrar'},
+  pt:{batch:'Lote',history:'Histórico',favorites:'Salvos',display:'Exibição',theme:'Tema',font:'Tamanho do texto',close:'Fechar'},
+  it:{batch:'Batch',history:'Cronologia',favorites:'Salvati',display:'Aspetto',theme:'Tema',font:'Dimensione testo',close:'Chiudi'},
+  ko:{batch:'일괄 조회',history:'기록',favorites:'저장됨',display:'화면',theme:'테마',font:'글자 크기',close:'닫기'},
+  ru:{batch:'Пакетно',history:'История',favorites:'Избранное',display:'Вид',theme:'Тема',font:'Размер текста',close:'Закрыть'},
+  ar:{batch:'بحث جماعي',history:'السجل',favorites:'المحفوظات',display:'العرض',theme:'المظهر',font:'حجم النص',close:'إغلاق'},
+  hi:{batch:'बैच',history:'इतिहास',favorites:'सहेजे गए',display:'दिखावट',theme:'थीम',font:'पाठ आकार',close:'बंद करें'},
+  id:{batch:'Massal',history:'Riwayat',favorites:'Tersimpan',display:'Tampilan',theme:'Tema',font:'Ukuran teks',close:'Tutup'}
+ };
+function refreshWhoisNav(code){
+ code=normalizeWhoisLanguage(code)||'en'; const t=WHOIS_NAV_TEXT[code]||WHOIS_NAV_TEXT.en;
+ document.querySelectorAll('[data-nav-label]').forEach(el=>{const v=t[el.dataset.navLabel];if(v)el.textContent=v});
+ for(const [id,key] of [['displayTitle','display'],['themeSettingLabel','theme'],['fontSettingLabel','font']]){const el=document.getElementById(id);if(el)el.textContent=t[key]}
+ document.querySelectorAll('.popover-close,.choice-close').forEach(el=>{el.title=t.close;el.setAttribute('aria-label',t.close)});
+ const select=document.getElementById('langSelect');if(!select)return;
+ translateLanguageGroups(select,code);
+ const current=document.getElementById('choice-language-current'),title=document.getElementById('choice-language-title');
+ if(current)current.textContent=select.selectedOptions[0]?.textContent||LANGUAGE_GROUPS[code][0];if(title)title.textContent=LANGUAGE_GROUPS[code][0];
+ document.querySelectorAll('#choice-language-options [data-lang]').forEach(el=>{const active=el.dataset.lang===code;el.classList.toggle('is-current',active);el.setAttribute('aria-checked',String(active))});
+ document.querySelectorAll('#choice-language-options .choice-group-heading').forEach(el=>{el.textContent=LANGUAGE_GROUPS[code][Number(el.dataset.group)+1]||''});
+}
