@@ -26,7 +26,11 @@ const EXT_INPUT_LABELS={'zh-Hant':'網域名稱',"pt": "Nome de domínio", "it":
 function detectLang(){let saved='';try{saved=localStorage.getItem('whoisLang')||''}catch(e){}if(LANGS[saved])return saved;const n=(navigator.language||'en').toLowerCase();const code=n.split('-')[0];if(code==='zh'&&(/tw|hk|mo|hant/.test(n)))return 'zh-Hant';return LANGS[n]?n:(LANGS[code]?code:'en')}let lang=detectLang(),currentData=null;const t=k=>(EXT_INPUT_LABELS[lang]&&k==='domainInputLabel'?EXT_INPUT_LABELS[lang]:({en:{domainInputLabel:'Domain name',rawWhois:"Raw WHOIS",rawRdap:"Raw RDAP"},zh:{domainInputLabel:'域名',rawWhois:"原始 WHOIS",rawRdap:"原始 RDAP"},de:{domainInputLabel:'Domainname',rawWhois:"WHOIS-Rohdaten",rawRdap:"RDAP-Rohdaten"},fr:{domainInputLabel:'Nom de domaine',rawWhois:"WHOIS brut",rawRdap:"RDAP brut"},ja:{domainInputLabel:'ドメイン名',rawWhois:"WHOIS 生データ",rawRdap:"RDAP 生データ"},es:{domainInputLabel:'Nombre de dominio',rawWhois:"WHOIS sin procesar",rawRdap:"RDAP sin procesar"},'zh-Hant':{domainInputLabel:'網域名稱',rawWhois:'原始 WHOIS',rawRdap:'原始 RDAP'}}[lang]?.[k]||LANGS[lang][k]||LANGS.en[k]||k));const sel=document.getElementById('langSelect');populateLanguageSelect(sel,LANGS);const GROUP_TITLES={'zh-Hant':['註冊與註冊商','DNS 與網域狀態'],en:['Registration & Registrar','DNS & Domain Status'],zh:['注册与注册商','DNS 与域名状态'],de:['Registrierung & Registrar','DNS & Domainstatus'],fr:['Enregistrement & bureau','DNS & statut du domaine'],ja:['登録・レジストラ','DNS・ドメイン状態'],es:['Registro y registrador','DNS y estado del dominio']};Object.assign(GROUP_TITLES,{"pt": ["Registro e registrador", "DNS e estado do domínio"], "it": ["Registrazione e registrar", "DNS e stato del dominio"], "ko": ["등록 및 등록기관", "DNS 및 도메인 상태"], "ru": ["Регистрация и регистратор", "DNS и статус домена"], "ar": ["التسجيل والمسجّل", "DNS وحالة النطاق"], "hi": ["पंजीकरण और रजिस्ट्रार", "DNS और डोमेन स्थिति"], "id": ["Pendaftaran dan registrar", "DNS dan status domain"]});
 function applyLang(){document.documentElement.lang=lang==='zh'?'zh-CN':(lang==='zh-Hant'?'zh-TW':lang);document.documentElement.dir=lang==='ar'?'rtl':'ltr';sel.value=lang;translateLanguageGroups(sel,lang);translateThemes();renderBrand(lang);document.getElementById('domainInput').setAttribute('aria-label',t('domainInputLabel'));document.querySelectorAll('[data-i18n]').forEach(el=>{const v=t(el.dataset.i18n);if(v)el.textContent=v});document.querySelector('[data-i18n=identityGroup]').textContent=(GROUP_TITLES[lang]||GROUP_TITLES.en)[0];document.querySelector('[data-i18n=technicalGroup]').textContent=(GROUP_TITLES[lang]||GROUP_TITLES.en)[1];if(currentData)render(currentData);window.renderPriceForLanguage?.()}sel.onchange=()=>{lang=sel.value;try{localStorage.setItem('whoisLang',lang)}catch(e){}applyLang()};
 function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}function safeUrl(v){try{const u=new URL(v);return /^https?:$/.test(u.protocol)?u.href:''}catch{return''}}
-let rawPath='';try{rawPath=decodeURIComponent(location.pathname.replace(/^\/+|\/+$/g,''))}catch{rawPath=''}const queryDomain=new URLSearchParams(location.search).get('domain');const domain=cleanDomain(location.pathname==='/lookup.html'?queryDomain:rawPath);document.getElementById('domainInput').value=domain;document.getElementById('searchForm').onsubmit=e=>{e.preventDefault();const d=cleanDomain(document.getElementById('domainInput').value);if(d)location.href=searchUrl(d)};
+const routeName=location.pathname.replace(/\/+$/,'').split('/').pop();
+let routeDomain='';
+try{routeDomain=decodeURIComponent(routeName||'')}catch{}
+const domain=/\.html$/i.test(routeDomain)?'':cleanDomain(routeDomain);
+document.getElementById('domainInput').value=domain;
 function fmtDate(v){return window.WhoisTimezone.format(v)}
 function humanDuration(s){
  if(!s)return '';
@@ -176,7 +180,6 @@ async function load(){
  const controller=new AbortController();requestController=controller;
 
  try{
-  await new Promise(resolve=>requestAnimationFrame(resolve));
   // One merged API request keeps status interpretation identical to the backend for every TLD.
   const payload=await WhoisLookup.query(domain,controller.signal);
   queryCompletedAt=new Date();
@@ -193,9 +196,13 @@ async function load(){
   if(requestController===controller)requestController=null;
  }
 }
-window.addEventListener('DOMContentLoaded',load,{once:true});
+function startResult(){
+ try{initThemePicker();applyLang();updateSearchControls()}catch(err){console.warn('Result controls could not be initialized',err)}
+ load();
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startResult,{once:true});
+else queueMicrotask(startResult);
 
-initThemePicker();
 
 function renderHistory(){const panel=document.getElementById('historyPanel'),title=document.getElementById('historySummary'),list=document.getElementById('historyList');if(!panel||!title||!list)return;const arr=readHistory();title.textContent=htxt('history')+' ('+arr.length+')';list.replaceChildren();if(!arr.length){const empty=document.createElement('div');empty.className='history-empty';empty.textContent=htxt('empty');list.append(empty)}else arr.forEach(d=>{const row=document.createElement('div');row.className='history-row';const a=document.createElement('a');a.className='history-link';a.textContent=d;a.href=searchUrl(d);const del=document.createElement('button');del.type='button';del.className='history-remove';del.textContent='×';del.title=htxt('remove');del.setAttribute('aria-label',htxt('remove')+' '+d);del.addEventListener('click',()=>writeHistory(readHistory().filter(x=>x!==d)));row.append(a,del);list.append(row)});const note=document.getElementById('historyNote');if(note)note.textContent=htxt('saved');const all=document.getElementById('historyClear');if(all){all.textContent=htxt('clear');all.hidden=!arr.length}}
 function updateSearchControls(){const input=document.getElementById('domainInput');const btn=document.getElementById('clearInput');btn.hidden=!input.value;btn.title=htxt('clearInput');btn.setAttribute('aria-label',htxt('clearInput'));const submit=document.getElementById('searchSubmit');submit.title=htxt('searchIcon');submit.setAttribute('aria-label',htxt('searchIcon'));renderHistory();renderFavorites()}
@@ -212,7 +219,7 @@ function returnHome(){
  const price=document.getElementById('priceWidget');if(price)price.hidden=true;
  const details=document.getElementById('priceDetails');if(details)details.hidden=true;
  const mobile=document.getElementById('mobilePriceDialog');if(mobile)mobile.hidden=true;
- location.replace('/');
+ location.replace(new URL('./',document.baseURI));
 }
 clr.onclick=()=>{input.value='';returnHome()};
 input.addEventListener('input',e=>{input.setCustomValidity('');if(!input.value.trim()&&!e.isComposing){returnHome();return}updateSearchControls()});
@@ -227,19 +234,13 @@ input.addEventListener('keydown',e=>{
 
 const shareButton=document.getElementById('shareLink');
 shareButton.addEventListener('click',async()=>{
- const link=location.origin+searchUrl(domain);
+ const link=new URL(searchUrl(domain),document.baseURI).href;
  try{await window.copyToClipboard(link);shareButton.title=shareLabel(1);shareButton.setAttribute('aria-label',shareLabel(1));window.showToast?.(shareLabel(1),'success')}
  catch{window.showToast?.(window.toastText?.('copyFailed')||'Copy failed','error');window.prompt(shareLabel(2),link)}
 });
 
 
 /* V29 lightweight controls: export, bookmark and verifiable query timestamp. */
-const resultToolLabels={
- en:['Save domain','Remove saved domain','Download TXT','Download JSON','Queried at','Sources'],
- zh:['收藏域名','取消收藏','下载 TXT','下载 JSON','查询时间','数据来源'],
- 'zh-Hant':['收藏網域','取消收藏','下載 TXT','下載 JSON','查詢時間','資料來源']
-};
-const xt=i=>(resultToolLabels[lang]||resultToolLabels.en)[i];
 const lifecycleKey='whoisLifecycleV1';
 let lifecycleRecord=null;
 function rememberLifecycle(data){

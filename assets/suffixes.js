@@ -6,7 +6,7 @@ window.WhoisSuffixes = (() => {
   }))].sort();
   let catalog;
   async function read(name) {
-    const response = await fetch('/assets/'+name+'.json?v=63', {cache:'force-cache'});
+    const response = await fetch(new URL('assets/'+name+'.json?v=65',document.baseURI).href, {cache:'force-cache'});
     if (!response.ok) throw new Error('Suffix catalog');
     const data = await response.json();
     const list = normalize(Array.isArray(data) ? data : data.suffixes || []);

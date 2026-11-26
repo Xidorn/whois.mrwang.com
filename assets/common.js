@@ -117,7 +117,7 @@ function cleanDomain(value){
  }catch{return ''}
 }
 function validDomain(input){return !!cleanDomain(input)&&cleanDomain(input)===input}
-function searchUrl(domain){return '/lookup.html?domain='+encodeURIComponent(domain)}
+function searchUrl(domain){return new URL(encodeURIComponent(domain),document.baseURI).pathname}
 
 
 /* V29: explicit, durable local bookmarks; no automatic expiration. */
