@@ -122,12 +122,23 @@ function promoMarkup(op,row,standard,cur){if(row.promocode?.[op]!==true)return '
  const offer=promoCandidate(cached,cur,standard);if(!offer)return '';
  const p=offer.p,code=String(p.code||'').trim();let codes=code?code.split(',').map(s=>s.trim()).filter(Boolean):[];const details=[];
  if(p.new_user_only===true)details.push(pt(7));if(Number(p.limit_count)>0)details.push(pt(8)+' '+Number(p.limit_count));if(p.endtime)details.push(pt(9)+' '+String(p.endtime));if(p.instruction)details.push(String(p.instruction));
- const copyCodes=codes.map(c=>`<button type="button" class="promo-copy" data-promo-copy="${esc(c)}" aria-label="${esc(pt(4))}: ${esc(c)}" title="${esc(pt(4))}"><b dir="ltr">${esc(c)}</b><svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button>`).join('');
- return `<span class="promo-block"><span class="promo-price-line"><small class="promo-tag">${esc(pt(0))}</small><del dir="ltr" aria-label="${esc(pt(2))}">${esc(format(standard,cur))}</del><strong class="promo-price" dir="ltr" aria-label="${esc(pt(1))}">${esc(format(offer.value,cur))}</strong></span>${codes.length?`<span class="promo-code-line">${copyCodes}<span class="promo-feedback" role="status" aria-live="polite"></span></span>`:`<small class="promo-auto">${esc(pt(6))}</small>`}${details.length?`<small class="promo-terms">${details.map(esc).join(' · ')}</small>`:''}</span>`;
+ const copyCodes=codes.map(c=>`<button type="button" class="promo-copy" data-promo-copy="${esc(c)}" aria-label="${esc(pt(4))}: ${esc(c)}" title="${esc(pt(4))}"><b dir="ltr">${esc(c)}</b><svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg><span class="promo-copy-feedback" aria-hidden="true">${esc(pt(5))}</span></button>`).join('');
+ return `<span class="promo-block"><span class="promo-price-line"><small class="promo-tag">${esc(pt(0))}</small><del dir="ltr" aria-label="${esc(pt(2))}">${esc(format(standard,cur))}</del><strong class="promo-price" dir="ltr" aria-label="${esc(pt(1))}">${esc(format(offer.value,cur))}</strong></span>${codes.length?`<span class="promo-code-line">${copyCodes}</span>`:`<small class="promo-auto">${esc(pt(6))}</small>`}${details.length?`<small class="promo-terms">${details.map(esc).join(' · ')}</small>`:''}</span>`;
 }
 function closeMobile(){if(!mobileDialog||mobileDialog.hidden)return;mobileDialog.hidden=true;document.body.style.removeProperty('overflow');collapse();if(previousFocus?.isConnected)previousFocus.focus();previousFocus=null}
 function collapse(){detail.hidden=true;opened=null;buttons.forEach(b=>{b.classList.remove('is-active');b.setAttribute('aria-expanded','false')})}
-function copyHandler(e){const b=e.target.closest('[data-promo-copy]');if(!b)return;const code=b.dataset.promoCopy;if(!code)return;copyText(code).then(()=>{b.classList.add('is-copied');b.title=pt(5);b.setAttribute('aria-label',pt(5)+': '+code);const feedback=b.closest('.promo-code-line')?.querySelector('.promo-feedback');if(feedback)feedback.textContent=pt(5);window.showToast?.(pt(5),'success')}).catch(()=>{b.title=pt(4);window.showToast?.(window.toastText?.('copyFailed')||'Copy failed','error')})}
+const promoCopyTimers=new WeakMap();
+function copyHandler(e){
+ const b=e.target.closest('[data-promo-copy]');if(!b)return;
+ const code=b.dataset.promoCopy;if(!code)return;
+ copyText(code).then(()=>{
+  if(!b.isConnected){window.showToast?.(pt(5),'success');return;}
+  clearTimeout(promoCopyTimers.get(b));
+  b.classList.add('is-copied');b.title=pt(5);b.setAttribute('aria-label',pt(5)+': '+code);
+  window.showToast?.(pt(5),'success');
+  promoCopyTimers.set(b,setTimeout(()=>{b.classList.remove('is-copied');b.title=pt(4);b.setAttribute('aria-label',pt(4)+': '+code);promoCopyTimers.delete(b)},2000));
+ }).catch(()=>{window.showToast?.(window.toastText?.('copyFailed')||'Copy failed','error')});
+}
 detail.addEventListener('click',copyHandler);mobileDetails?.addEventListener('click',copyHandler);
 function syncMobile(){
  if(!mobileRail)return;
