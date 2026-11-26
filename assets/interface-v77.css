@@ -10,7 +10,7 @@
 @supports (background:conic-gradient(from 0deg,red,blue)){
  #content .domain-head,#content .record-flow,#content .raw,.lookup-desk,.batch-body .batch-card,.batch-body .batch-results{
  border-color:transparent!important;
- background:linear-gradient(var(--sheet),var(--sheet)) padding-box,conic-gradient(from var(--result-angle),var(--line) 0%,var(--line) 12%,var(--ring-strength,var(--accent)) 23%,var(--status) 30%,var(--line) 43%,var(--line) 77%,var(--accent) 92%,var(--line)) border-box;
+ background:linear-gradient(var(--sheet),var(--sheet)) padding-box,conic-gradient(from var(--result-angle),var(--line) 0%,var(--line) 12%,var(--ring-strength,var(--accent)) 25%,var(--status) 34%,var(--line) 52%,var(--line) 76%,var(--accent) 92%,var(--line)) border-box;
  animation:result-edge var(--ring-speed,9s) linear infinite;animation-delay:var(--ring-delay,0s)
  }
 }
