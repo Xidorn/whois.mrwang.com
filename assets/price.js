@@ -200,31 +200,30 @@ async function update(name,force=false){
  const ext=WhoisSuffixes.match(next,catalog);
  const expires=Date.now();
  const cached=cachedQuote(ext);
- const requests=operations.map(op=>!force&&cached?.until>expires&&cached.rows[op]?.length?
-   Promise.resolve(cached.rows[op]):
-   fetchJSON(API+'/api/v1?domain='+encodeURIComponent(ext)+'&order='+op,ctl.signal).then(value=>{
-    if(value?.code!==100||!Array.isArray(value?.data?.price))throw new Error('Pricing response');
-    return value.data.price.filter(row=>row&&typeof row==='object'&&(finite(row[op])!==null||finite(row[op+'_cny'])!==null));
-   }));
+ const validCache=!force&&cached?.until>expires;
+ suffix=ext;
+ if(rateCache?.until>expires)rates=rateCache.rates;
+ if(validCache){for(const op of operations)if(Array.isArray(cached.rows?.[op]))records[op]=cached.rows[op];paint()}
  const timer=setTimeout(()=>ctl.abort(),9000);
  try{
-  const rateRequest=rateCache?.until>expires?Promise.resolve(rateCache.rates):
-   fetchJSON(API+'/api/currencies',ctl.signal).then(extractRates);
-  const [rateResult,...results]=await Promise.allSettled([rateRequest,...requests]);
+  const rateRequest=rateCache?.until>expires?Promise.resolve():fetchJSON(API+'/api/currencies',ctl.signal).then(value=>{
+   if(token!==requestId)return;
+   rates=extractRates(value);
+   if(Object.keys(rates).length>1){rateCache={rates,until:Date.now()+3600000};try{sessionStorage.setItem('whois-quote-rates',JSON.stringify(rateCache))}catch{}}
+   paint();
+  });
+  const requests=operations.map(async op=>{
+   if(validCache&&Array.isArray(cached.rows?.[op]))return;
+   const value=await fetchJSON(API+'/api/v1?domain='+encodeURIComponent(ext)+'&order='+op,ctl.signal);
+   if(value?.code!==100||!Array.isArray(value?.data?.price))throw new Error('Pricing response');
+   if(token!==requestId)return;
+   records[op]=value.data.price.filter(row=>row&&typeof row==='object'&&(finite(row[op])!==null||finite(row[op+'_cny'])!==null));
+   paint();
+  });
+  const [, ...results]=await Promise.allSettled([rateRequest,...requests]);
   if(token!==requestId)return;
-  if(rateResult.status==='fulfilled'){
-   rates=rateResult.value;
-   if(Object.keys(rates).length>1){
-    rateCache={rates,until:Date.now()+3600000};
-    try{sessionStorage.setItem('whois-quote-rates',JSON.stringify(rateCache))}catch{}
-   }
-  }
-  results.forEach((result,i)=>{if(result.status==='fulfilled')records[operations[i]]=result.value});
-  if(Object.values(records).some(rows=>rows.length)){
-   suffix=ext;
-   saveQuote(ext,{rows:records,until:Date.now()+300000});
-  }
   priceError=results.some(result=>result.status==='rejected');
+  if(!priceError&&!validCache&&Object.values(records).some(rows=>rows.length))saveQuote(ext,{rows:records,until:Date.now()+300000});
   paint();
  }finally{clearTimeout(timer)}
 }
