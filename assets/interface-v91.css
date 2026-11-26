@@ -726,3 +726,32 @@ select option{background:var(--sheet);color:var(--text)}
  #mobilePriceDialog .promo-copy-feedback{font-size:10px}
 }
 @media(max-width:360px){#content .domain-summary .mobile-price-toggle:not([hidden]),#content .domain-identity .share-link{width:36px;min-width:36px;flex-basis:36px}#mobilePriceDialog .quote-row{grid-template-columns:minmax(0,1fr);gap:8px}#mobilePriceDialog .quote-values{align-items:flex-end}}
+
+/* V94: isolated, dimension-stable coupon feedback and quote alignment. */
+#mobilePriceDialog .quote-row{grid-template-columns:minmax(0, 39%) minmax(0,1fr);column-gap:16px;align-items:start}
+#mobilePriceDialog .quote-name{min-width:0;overflow-wrap:anywhere;line-height:1.55;padding-top:2px}
+#mobilePriceDialog .quote-name a{font-weight:650}
+#mobilePriceDialog .quote-values{min-width:0;gap:8px}
+#mobilePriceDialog .quote-price,#mobilePriceDialog .promo-price{font-variant-numeric:tabular-nums;line-height:1.35;overflow-wrap:anywhere;white-space:normal}
+.quote-values .promo-code-line{justify-content:flex-end;gap:8px}
+.quote-values .promo-copy{grid-template-columns:minmax(0,1fr) 14px minmax(0,auto);column-gap:7px;align-items:center;box-sizing:border-box;min-width:0;max-width:100%;min-height:36px;padding:7px 10px;box-shadow:inset 0 -1px var(--line);border:0;line-height:1.4;transition:color .15s,background-color .15s,box-shadow .15s}
+.quote-values .promo-copy b{grid-column:1;grid-row:1;min-width:0;overflow-wrap:anywhere;word-break:break-word}
+.quote-values .promo-copy svg{grid-column:2;grid-row:1;width:14px;height:14px;align-self:center;justify-self:center}
+.quote-values .promo-copy .promo-copy-check{visibility:hidden}
+.quote-values .promo-copy.is-copied svg:not(.promo-copy-check){visibility:hidden}
+.quote-values .promo-copy.is-copied .promo-copy-check{visibility:visible}
+.quote-values .promo-copy-feedback{grid-column:3;grid-row:1;visibility:hidden;max-width:9em;min-width:0;text-align:start;line-height:1.4;overflow-wrap:anywhere}
+.quote-values .promo-copy.is-copied .promo-copy-feedback{visibility:visible}
+.quote-values .promo-copy.is-copied{background:var(--wash);color:var(--accent);box-shadow:inset 0 -1px var(--accent)}
+#mobilePriceDialog .mobile-price-body{scrollbar-gutter:stable;overscroll-behavior:contain}
+#mobilePriceDialog .quote-footer{align-items:flex-start;line-height:1.5}
+@media(max-width:760px){
+ #mobilePriceDialog .mobile-price-body{padding-inline:0;scrollbar-gutter:auto}
+ #mobilePriceDialog .quote-row{grid-template-columns:minmax(0,36%) minmax(0,1fr);column-gap:10px;padding-block:15px}
+ #mobilePriceDialog .promo-copy{min-height:44px;padding:7px 8px;column-gap:5px}
+ #mobilePriceDialog .promo-copy-feedback{max-width:7em}
+ #mobilePriceDialog .promo-terms{font-size:11px;line-height:1.65}
+}
+@media(max-width:360px){#mobilePriceDialog .quote-row{grid-template-columns:minmax(0,1fr);gap:8px}}
+@media(hover:none){.quote-values .promo-copy:not(.is-copied):hover{background:var(--inner);color:var(--text)}}
+@media(prefers-reduced-motion:reduce){.quote-values .promo-copy{transition:none}}

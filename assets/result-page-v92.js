@@ -158,7 +158,7 @@ function renderMetrics(d){
 let metrics='';
 metrics+=metric(t('domainAge'),exactRelative(d.creationDateISO8601||d.creationDate,d.createdAgo,'elapsed'),'',ageTone(d));
 const tone=expiryTone(d);
-const elapsedExpiry=tone==='expiry-past'?(lang==='zh'?'已过到期日':lang==='zh-Hant'?'已過到期日':'Past expiration date'):'';
+const elapsedExpiry=tone==='expiry-past'?(lang==='zh'?'已过期':lang==='zh-Hant'?'已過期':'Past expiration date'):'';
 metrics+=metric(t('expiresIn'),elapsedExpiry||exactRelative(d.expirationDateISO8601||d.expirationDate,d.expiresIn,'remaining'),'',tone,elapsedExpiry?null:expiryProgress(d));
 metrics+=metric(t('updatedAgo'),exactRelative(d.updatedDateISO8601||d.updatedDate,d.updatedAgo,'elapsed'));
 if(!metrics)metrics+=metric(t('availableIn'),exactRelative(d.availableDateISO8601||d.availableDate,d.availableIn,'remaining'));
@@ -456,26 +456,51 @@ function sorted(op,cur){return(records[op]||[]).map(row=>({row,value:convert(row
 function promoKey(op,row){return suffix+'|'+op+'|'+String(row.registrar||'').toLowerCase()}
 function promoCandidate(data,cur,standard){if(!data||data.code!==100||data.data?.promocode!==true)return null;const d=data.data;const candidates=Array.isArray(d.promos)&&d.promos.length?d.promos:(d.promo?[d.promo]:[]);return candidates.map(p=>({p,value:convertPromo(p,cur)})).filter(x=>x.value!==null&&x.value<=standard+.00001).sort((a,b)=>a.value-b.value)[0]||null}
 function copyText(text){if(window.copyToClipboard)return window.copyToClipboard(text);if(navigator.clipboard?.writeText&&window.isSecureContext)return navigator.clipboard.writeText(text);return Promise.reject(Error('Clipboard unavailable'))}
-function promoMarkup(op,row,standard,cur){if(row.promocode?.[op]!==true)return '';
+function promoMarkup(op,row,standard,cur,rowIndex){if(row.promocode?.[op]!==true)return '';
  const key=promoKey(op,row),cached=offers.get(key);if(!offers.has(key))return `<span class="promo-wait" role="status">${esc(pt(11))}</span>`;if(!cached)return '';
  const offer=promoCandidate(cached,cur,standard);if(!offer)return '';
  const p=offer.p,code=String(p.code||'').trim();let codes=code?code.split(',').map(s=>s.trim()).filter(Boolean):[];const details=[];
  if(p.new_user_only===true)details.push(pt(7));if(Number(p.limit_count)>0)details.push(pt(8)+' '+Number(p.limit_count));if(p.endtime)details.push(pt(9)+' '+String(p.endtime));if(p.instruction)details.push(String(p.instruction));
- const copyCodes=codes.map(c=>`<button type="button" class="promo-copy" data-promo-copy="${esc(c)}" aria-label="${esc(pt(4))}: ${esc(c)}" title="${esc(pt(4))}"><b dir="ltr">${esc(c)}</b><svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg><span class="promo-copy-feedback" aria-hidden="true">${esc(pt(5))}</span></button>`).join('');
+ const copyCodes=codes.map((c,i)=>`<button type="button" class="promo-copy" data-copy-key="${esc(JSON.stringify([domain,op,row.registrar,rowIndex,i,c]))}" data-promo-copy="${esc(c)}" aria-label="${esc(pt(4))}: ${esc(c)}" title="${esc(pt(4))}"><b dir="ltr">${esc(c)}</b><svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg><svg class="promo-copy-check" aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg><span class="promo-copy-feedback" aria-hidden="true">${esc(pt(5))}</span></button>`).join('');
  return `<span class="promo-block"><span class="promo-price-line"><small class="promo-tag">${esc(pt(0))}</small><del dir="ltr" aria-label="${esc(pt(2))}">${esc(format(standard,cur))}</del><strong class="promo-price" dir="ltr" aria-label="${esc(pt(1))}">${esc(format(offer.value,cur))}</strong></span>${codes.length?`<span class="promo-code-line">${copyCodes}</span>`:`<small class="promo-auto">${esc(pt(6))}</small>`}${details.length?`<small class="promo-terms">${details.map(esc).join(' · ')}</small>`:''}</span>`;
 }
 function closeMobile(){if(!mobileDialog||mobileDialog.hidden)return;mobileDialog.hidden=true;document.body.style.removeProperty('overflow');collapse();if(previousFocus?.isConnected)previousFocus.focus();previousFocus=null}
 function collapse(){detail.hidden=true;opened=null;buttons.forEach(b=>{b.classList.remove('is-active');b.setAttribute('aria-expanded','false')})}
-const promoCopyTimers=new WeakMap();
+// State belongs to an individual offer, never to the shared coupon text.
+const promoCopyTimers=new Map();
+const promoMarkupCache=new WeakMap();
+function setPromoFeedback(button,active){
+ const code=button.dataset.promoCopy;
+ button.classList.toggle('is-copied',active);
+ button.title=pt(active?5:4);
+ button.setAttribute('aria-label',pt(active?5:4)+': '+code);
+}
+function restorePromoFeedback(root){
+ if(!root)return;
+ root.querySelectorAll('[data-copy-key]').forEach(b=>setPromoFeedback(b,promoCopyTimers.has(b.dataset.copyKey)));
+}
+function renderPromoList(root,markup){
+ if(!root||promoMarkupCache.get(root)===markup)return;
+ const active=document.activeElement,focusKey=root.contains(active)?active?.dataset?.copyKey:null;
+ root.innerHTML=markup;promoMarkupCache.set(root,markup);restorePromoFeedback(root);
+ if(focusKey){const next=[...root.querySelectorAll('[data-copy-key]')].find(b=>b.dataset.copyKey===focusKey);next?.focus({preventScroll:true})}
+}
+function clearPromoFeedback(){
+ for(const timer of promoCopyTimers.values())clearTimeout(timer);
+ promoCopyTimers.clear();
+}
 function copyHandler(e){
- const b=e.target.closest('[data-promo-copy]');if(!b)return;
- const code=b.dataset.promoCopy;if(!code)return;
+ const b=e.target.closest('[data-promo-copy]');if(!b||!e.currentTarget.contains(b))return;
+ const root=e.currentTarget,code=b.dataset.promoCopy,key=b.dataset.copyKey,token=requestId;if(!code||!key)return;
  copyText(code).then(()=>{
-  if(!b.isConnected){window.showToast?.(pt(5),'success');return;}
-  clearTimeout(promoCopyTimers.get(b));
-  b.classList.add('is-copied');b.title=pt(5);b.setAttribute('aria-label',pt(5)+': '+code);
-  window.showToast?.(pt(5),'success');
-  promoCopyTimers.set(b,setTimeout(()=>{b.classList.remove('is-copied');b.title=pt(4);b.setAttribute('aria-label',pt(4)+': '+code);promoCopyTimers.delete(b)},2000));
+  if(token!==requestId)return;
+  clearTimeout(promoCopyTimers.get(key));
+  promoCopyTimers.set(key,setTimeout(()=>{
+   promoCopyTimers.delete(key);
+   for(const root of [detail,mobileDetails])root?.querySelectorAll('[data-copy-key]').forEach(el=>{if(el.dataset.copyKey===key)setPromoFeedback(el,false)});
+  },2000));
+  // Only the clicked offer in the active list changes. Other rows are untouched.
+  root.querySelectorAll('[data-copy-key]').forEach(el=>{if(el.dataset.copyKey===key)setPromoFeedback(el,true)});
  }).catch(()=>{window.showToast?.(window.toastText?.('copyFailed')||'Copy failed','error')});
 }
 detail.addEventListener('click',copyHandler);mobileDetails?.addEventListener('click',copyHandler);
@@ -500,7 +525,7 @@ function syncMobile(){
   button.firstElementChild.textContent=tt(i);
   button.lastElementChild.textContent=format(list.length?list[0].value:null,cur);
  });
- if(mobileDetails)mobileDetails.innerHTML=opened?detail.innerHTML:'';
+ if(mobileDetails)renderPromoList(mobileDetails,opened?(promoMarkupCache.get(detail)||''):'');
 }
 function holdingCost(row,register,cur){
  const label=language()==='zh'?'标准价合计':language()==='zh-Hant'?'標準價合計':'Standard total';
@@ -511,9 +536,9 @@ function holdingCost(row,register,cur){
  return '<small class="quote-holding">'+esc(label+' · 2'+unit+' '+format(register+renew,cur)+' · 3'+unit+' '+format(register+2*renew,cur))+'</small>';
 }
 function paint(){syncCurrency(currencySelect);syncCurrency(mobileCurrencySelect);retryPrice.hidden=!priceError;retryPrice.textContent=language()==='zh'?'报价获取失败，重试':language()==='zh-Hant'?'報價取得失敗，重試':'Price lookup failed. Retry';const cur=preferredCurrency();let any=false;buttons.forEach((b,i)=>{const op=operations[i],list=sorted(op,cur),v=list.length?list[0].value:null;b.querySelector('.price-kind-label').textContent=tt(i);b.querySelector('.price-kind-value').textContent=format(v,cur);b.disabled=!list.length;b.title=tt(i)+' · '+format(v,cur);b.setAttribute('aria-label',tt(i)+' '+format(v,cur)+' · '+tt(9));b.classList.toggle('is-active',opened===op);b.setAttribute('aria-expanded',String(opened===op));if(list.length)any=true});widget.hidden=!any;if(mobileToggle)mobileToggle.hidden=!any;if(mobileLabel)mobileLabel.textContent=tt(9);if(mobileToggle){mobileToggle.title=tt(9);mobileToggle.setAttribute('aria-label',tt(9));}if(mobileTitle)mobileTitle.textContent=tt(3)+(suffix?' · .'+suffix:'');if(!any){closeMobile();collapse();return}if(!opened){detail.hidden=true;syncMobile();return}const list=sorted(opened,cur);if(!list.length){collapse();return}detail.hidden=true;const show=list.slice(0,8);
- const table=show.map(({row,value})=>{const name=esc(row.registrarname||row.registrar||'—'),url=validURL(row.registrarweb),hasPromo=row.promocode?.[opened]===true;return `<div class="quote-row"><span class="quote-name">${url?`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer nofollow">${name}</a>`:name}${opened==='register'?holdingCost(row,value,cur):''}</span><div class="quote-values">${hasPromo?promoMarkup(opened,row,value,cur):''}<strong class="quote-price${hasPromo&&promoCandidate(offers.get(promoKey(opened,row)),cur,value)?' quote-price-suppressed':''}" dir="ltr">${esc(format(value,cur))}</strong></div></div>`}).join('');
+ const table=show.map(({row,value})=>{const name=esc(row.registrarname||row.registrar||'—'),url=validURL(row.registrarweb),hasPromo=row.promocode?.[opened]===true;return `<div class="quote-row"><span class="quote-name">${url?`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer nofollow">${name}</a>`:name}${opened==='register'?holdingCost(row,value,cur):''}</span><div class="quote-values">${hasPromo?promoMarkup(opened,row,value,cur,records[opened].indexOf(row)):''}<strong class="quote-price${hasPromo&&promoCandidate(offers.get(promoKey(opened,row)),cur,value)?' quote-price-suppressed':''}" dir="ltr">${esc(format(value,cur))}</strong></div></div>`}).join('');
  const updated=show.map(v=>v.row.updatedtime).filter(Boolean).sort().at(-1)||'—';const source=API+'/api/v1?domain='+encodeURIComponent(suffix)+'&order='+opened;
- detail.innerHTML=`<div class="quote-header"><strong>${esc(tt(3))} <span dir="ltr">.${esc(suffix)}</span> · ${esc(tt(operations.indexOf(opened)))}</strong><small>${esc(cur)}</small></div><p class="quote-note">${esc(tt(5))}</p><div class="quote-column"><div class="quote-head"><span>${esc(tt(4))}</span><span>${esc(tt(operations.indexOf(opened)))}</span></div>${table}</div><div class="quote-footer"><span>${esc(tt(7))}: ${esc(updated)} (UTC+8)</span><a href="${esc(source)}" rel="noopener noreferrer nofollow" target="_blank">${esc(tt(6))}</a></div>`;
+ renderPromoList(detail,`<div class="quote-header"><strong>${esc(tt(3))} <span dir="ltr">.${esc(suffix)}</span> · ${esc(tt(operations.indexOf(opened)))}</strong><small>${esc(cur)}</small></div><p class="quote-note">${esc(tt(5))}</p><div class="quote-column"><div class="quote-head"><span>${esc(tt(4))}</span><span>${esc(tt(operations.indexOf(opened)))}</span></div>${table}</div><div class="quote-footer"><span>${esc(tt(7))}: ${esc(updated)} (UTC+8)</span><a href="${esc(source)}" rel="noopener noreferrer nofollow" target="_blank">${esc(tt(6))}</a></div>`);
  syncMobile();
 }
 async function loadOffer(op,row,token){const key=promoKey(op,row);if(offers.has(key)||pending.has(key))return;pending.add(key);
@@ -535,12 +560,12 @@ async function update(name,force=false){
  const token=++requestId;
  suffix='';
  records={register:[],renew:[],transfer:[]};
- offers.clear();pending.clear();collapse();closeMobile();
+ offers.clear();pending.clear();clearPromoFeedback();collapse();closeMobile();
  priceError=false;
  widget.hidden=true;
  retryPrice.hidden=true;
  if(mobileToggle)mobileToggle.hidden=true;
- detail.replaceChildren();
+ renderPromoList(detail,'');
  controller?.abort();
  controller=new AbortController();
  const ctl=controller;
