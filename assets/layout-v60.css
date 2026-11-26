@@ -215,20 +215,20 @@ main.hero .hero-inner,main.hero #searchForm {
 .currency-control select:focus-visible { outline:0; }
 #searchForm { position:relative; }
 @supports (mask-composite:exclude) {
- .currency-control::before,#searchForm::after {
+ .currency-control::before {
   content:""; pointer-events:none; position:absolute; inset:0; z-index:1;
   padding:2px; border-radius:inherit; opacity:0;
   background:conic-gradient(from var(--lookup-ring-angle),var(--accent),var(--line) 22%,var(--status) 46%,var(--line) 68%,var(--accent));
   mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
   mask-composite:exclude;
  }
- .currency-control:focus-within::before,#searchForm:focus-within::after { opacity:1; }
+ .currency-control:focus-within::before { opacity:1; }
  @media(hover:hover) {
   .currency-control:hover::before { opacity:1; }
  }
  @media(prefers-reduced-motion:no-preference) {
-  .currency-control::before,#searchForm::after { transition:opacity .16s ease-out; }
-  .currency-control:is(:hover,:focus-within)::before,#searchForm:focus-within::after {
+  .currency-control::before { transition:opacity .16s ease-out; }
+  .currency-control:is(:hover,:focus-within)::before {
    animation:lookup-ring-turn 2.4s linear 2;
   }
  }

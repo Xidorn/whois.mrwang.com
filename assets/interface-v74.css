@@ -1,0 +1,34 @@
+/* V74: quiet controls, a dedicated result overview, modular records. */
+:root{--layout-width:1120px;--ui-radius:16px;--ui-pad:clamp(16px,2.6vw,28px);--ui-gap:18px}
+body{background-image:none}
+.topbar .top-inner{min-height:66px}.topbar{box-shadow:none}
+main.hero,main.wrap,.batch-body .batch-page{max-width:var(--layout-width);padding-inline:var(--layout-gutter)!important;box-sizing:border-box}
+main.hero{padding-top:clamp(58px,12vh,128px)!important}.hero .sub{margin-bottom:28px}.hero h1{letter-spacing:-.035em}
+.hero #searchForm,.search-strip .quick{border-radius:14px;box-shadow:none;min-height:60px;padding:5px;background:var(--sheet)}
+#searchForm::after{content:none!important;animation:none!important}#searchForm:focus-within{border-color:var(--accent);box-shadow:0 0 0 2px var(--wash)}
+.hero .lookup .search-icon,.search-strip .quick .search-icon{height:48px;width:50px;border-radius:9px}
+.lookup-desk{margin-top:28px;padding:0 20px 16px;background:var(--sheet);border-radius:14px}.desk-tabs{gap:24px}.desk-tabs button{min-height:52px}.desk-domains.desk-history{gap:0 24px}.desk-history a{min-height:45px}
+main.wrap{padding-top:28px}.search-strip{margin-bottom:22px}
+#content{background:transparent;border:0;box-shadow:none;border-radius:0!important;overflow:visible;display:grid;gap:var(--ui-gap)}
+#content .domain-head,#content .record-group,#content .raw,#content .source-line,#content .metrics{box-sizing:border-box;background:var(--sheet);border:1px solid var(--line)!important;border-radius:var(--ui-radius);padding:var(--ui-pad)!important;box-shadow:none;min-width:0}
+#content .domain-head{position:relative;background:linear-gradient(120deg,var(--sheet) 65%,var(--wash));isolation:isolate}
+@property --result-angle{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes result-edge{to{--result-angle:360deg}}
+@supports (mask-composite:exclude){#content .domain-head::before,.batch-results::before{content:'';display:block;position:absolute;inset:-1px;padding:1.5px;border-radius:inherit;pointer-events:none;z-index:2;background:conic-gradient(from var(--result-angle),var(--line) 0%,var(--accent) 12%,var(--status) 20%,var(--line) 32%,var(--line) 75%,var(--accent) 95%,var(--line));mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;animation:result-edge 7s linear infinite}}
+#content .domain-line{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:20px}
+#content .domain-identity{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:nowrap}
+#content .domain-summary{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}.domain-summary .domain{font-size:clamp(26px,4vw,43px);letter-spacing:-.035em}
+#content .domain-identity .meta-line{flex:none;margin:0}.domain-identity .share-link{background:var(--sheet)}
+#content .registration-state{font-size:12px;padding:5px 10px}
+#content .domain-line>#priceWidget:not([hidden]){grid-column:1;grid-row:2;width:100%;max-width:none;min-width:0;display:flex;gap:12px;align-items:center;padding:10px;background:var(--inner);border:1px solid var(--line);border-radius:12px;box-sizing:border-box}
+#priceWidget .price-rail{border:0;flex:1;min-width:0;gap:4px}.price-rail .price-kind{padding:10px 12px;border-radius:8px;min-width:0}.price-kind-value{overflow-wrap:anywhere;white-space:normal}.price-rail .price-kind:hover,.price-rail .price-kind[aria-expanded=true]{background:var(--sheet)}
+#content .metrics{margin:0!important;gap:0;padding:8px var(--ui-pad)!important;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr))!important}
+#content #metrics .metric{padding:16px 12px!important}#content #metrics .metric:first-child{padding-inline-start:0!important}
+#content .record-flow{gap:var(--ui-gap);grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}#content .record-flow:has(>.record-group[hidden]){grid-template-columns:1fr}
+#content .record-group-head{margin-bottom:20px;padding-bottom:14px}#content .record-subgroup+.record-subgroup{margin-top:24px}#content .record-subgroup h3{font-size:12px;letter-spacing:.025em}#content .record-group .row{min-width:0;gap:10px}
+#content .raw{padding-block:16px!important}#content .source-line{font-size:12px;padding-block:12px!important;color:var(--mute)}
+.batch-body .batch-page{padding-top:34px}.batch-body .batch-heading{margin-bottom:20px}.batch-body .batch-card,.batch-body .batch-results{box-shadow:none}.batch-input-grid{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:24px}.batch-card textarea{background:var(--inner);min-height:235px}.suffix-panel{padding-inline-start:24px}.suffix-list{max-height:155px}.suffix-chip{border-radius:7px}.batch-toolbar{margin-top:20px}.batch-body .batch-results{position:relative;isolation:isolate;margin-top:24px}.batch-stats{gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden}.batch-stat{border:0;border-radius:0;background:var(--sheet);padding:16px}.batch-stat+.batch-stat{border-inline-start:1px solid var(--line)}.batch-stat[aria-pressed=true]{box-shadow:inset 0 -2px var(--accent)}.batch-tools{margin-top:18px}.batch-row:nth-child(even){background:transparent}.batch-row:hover{background:var(--inner)}
+@media(max-width:850px){#content .record-flow{grid-template-columns:1fr}}
+@media(max-width:760px){main.hero{padding-top:60px!important}main.wrap{padding-top:18px}.lookup-desk{padding-inline:14px}.desk-tabs{gap:14px}#content .domain-line>#priceWidget:not([hidden]){display:none!important}#content .metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important;padding:4px 12px!important}#content #metrics .metric{border:0!important;padding:12px!important}#content .domain-identity{align-items:flex-start}#content .domain-summary{gap:6px}#content .domain-identity .share-link{width:34px;height:34px;flex-basis:34px}.batch-input-grid{grid-template-columns:1fr;gap:18px}.suffix-panel{padding:18px 0 0}.batch-card textarea{min-height:175px}.batch-stat{padding:12px 8px}.batch-stat strong{font-size:21px}.batch-body .batch-page{padding-top:24px}}
+@media(max-width:360px){.batch-stat:nth-child(3){border-inline-start:0}.batch-stat:nth-child(n+3){border-top:1px solid var(--line)}}
+@media(prefers-reduced-motion:reduce){#content .domain-head::before,.batch-results::before{animation:none!important}}
