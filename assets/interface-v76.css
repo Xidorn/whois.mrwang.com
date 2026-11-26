@@ -1,0 +1,27 @@
+/* V76 — two coherent result surfaces; permanent full-perimeter ring. */
+#content{gap:16px;--ui-pad:clamp(16px,2.8vw,30px)}
+#content .domain-head{margin:0;position:relative;isolation:isolate;overflow:visible;border:2px solid var(--line)!important;background:var(--sheet);border-radius:20px;padding:var(--ui-pad)!important}
+/* Layered backgrounds avoid inherited pseudo-element height/left constraints. */
+@supports(background:conic-gradient(from 0deg,red,blue)){
+ #content .domain-head{border-color:transparent!important;background:linear-gradient(var(--sheet),var(--sheet)) padding-box,conic-gradient(from var(--result-angle),var(--accent),var(--line) 22%,var(--status) 46%,var(--line) 68%,var(--accent)) border-box;animation:result-edge 5s linear infinite}
+}
+#content .domain-head::before,#content .domain-head::after{content:none!important;display:none!important;animation:none!important}
+#content .domain-line{gap:16px}
+#content .domain-line>#priceWidget:not([hidden]){border:0;background:var(--inner);padding:6px 10px;border-radius:10px}
+#content .domain-head #metrics{margin:20px 0 0!important;padding:0!important;border:0!important;border-top:1px solid var(--line)!important;border-radius:0;background:transparent;box-shadow:none;gap:0}
+#content .domain-head #metrics .metric{padding:16px 16px 0!important}
+#content .domain-head #metrics .metric:first-child{padding-inline-start:0!important}
+#content .record-flow{gap:0;align-items:stretch;background:var(--sheet);border:1px solid var(--line);border-radius:16px;padding:0;min-width:0}
+#content .record-flow:not(:has(>.record-group:not([hidden]))){display:none}
+#content .record-flow .record-group{background:transparent;border:0!important;border-radius:0;margin:0;padding:var(--ui-pad)!important}
+#content .record-flow .record-group:not([hidden])+.record-group:not([hidden]){border-inline-start:1px solid var(--line)!important}
+#content .record-group-head{margin:0 0 12px;padding-bottom:12px}
+#content .record-subgroup+.record-subgroup{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+#content #statusList{gap:0}
+#content #statusList .item{background:transparent;border:0;border-radius:0;padding:10px 0}
+#content #statusList .item+.item{border-top:1px solid var(--line)}
+#content .raw{margin:0;padding:12px var(--ui-pad)!important}
+#content .raw .export-bar{margin-bottom:6px}
+@media(max-width:850px){#content .record-flow .record-group:not([hidden])+.record-group:not([hidden]){border-inline-start:0!important;border-top:1px solid var(--line)!important}}
+@media(max-width:760px){#content{gap:12px}#content .domain-head{border-radius:16px}#content .domain-head #metrics .metric{padding:12px 8px!important}#content .domain-head #metrics .metric:nth-child(odd){padding-inline-start:0!important}#content .domain-head #metrics .metric:nth-child(n+3){border-top:1px solid var(--line)!important}}
+@media(prefers-reduced-motion:reduce){#content .domain-head{animation:none!important}}
