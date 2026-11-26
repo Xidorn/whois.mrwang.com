@@ -116,7 +116,29 @@ function closeMobile(){if(!mobileDialog||mobileDialog.hidden)return;mobileDialog
 function collapse(){detail.hidden=true;opened=null;buttons.forEach(b=>{b.classList.remove('is-active');b.setAttribute('aria-expanded','false')})}
 function copyHandler(e){const b=e.target.closest('[data-promo-copy]');if(!b)return;const code=b.dataset.promoCopy;if(!code)return;copyText(code).then(()=>{b.classList.add('is-copied');b.title=pt(5);b.setAttribute('aria-label',pt(5)+': '+code);const feedback=b.closest('.promo-code-line')?.querySelector('.promo-feedback');if(feedback)feedback.textContent=pt(5);window.showToast?.(pt(5),'success')}).catch(()=>{b.title=pt(4);window.showToast?.(window.toastText?.('copyFailed')||'Copy failed','error')})}
 detail.addEventListener('click',copyHandler);mobileDetails?.addEventListener('click',copyHandler);
-function syncMobile(){if(!mobileRail)return;const cur=preferredCurrency();mobileRail.replaceChildren();for(let i=0;i<operations.length;i++){const op=operations[i],list=sorted(op,cur),b=document.createElement('button');b.type='button';b.disabled=!list.length;b.className=opened===op?'is-active':'';const caption=document.createElement('small'),price=document.createElement('strong');caption.textContent=tt(i);price.textContent=format(list.length?list[0].value:null,cur);price.dir='ltr';b.append(caption,price);b.addEventListener('click',()=>{opened=op;paint();requestShownOffers()});mobileRail.append(b)}if(mobileDetails)mobileDetails.innerHTML=opened?detail.innerHTML:''}
+function syncMobile(){
+ if(!mobileRail)return;
+ const cur=preferredCurrency();
+ operations.forEach((op,i)=>{
+  let button=mobileRail.children[i];
+  if(!button){
+   button=document.createElement('button');
+   button.type='button';
+   const amount=document.createElement('strong');
+   amount.dir='ltr';
+   button.append(document.createElement('small'),amount);
+   button.addEventListener('click',()=>{opened=op;paint();requestShownOffers()});
+   mobileRail.append(button);
+  }
+  const list=sorted(op,cur);
+  button.disabled=!list.length;
+  button.classList.toggle('is-active',opened===op);
+  button.setAttribute('aria-pressed',String(opened===op));
+  button.firstElementChild.textContent=tt(i);
+  button.lastElementChild.textContent=format(list.length?list[0].value:null,cur);
+ });
+ if(mobileDetails)mobileDetails.innerHTML=opened?detail.innerHTML:'';
+}
 function holdingCost(row,register,cur){
  const label=language()==='zh'?'标准价合计':language()==='zh-Hant'?'標準價合計':'Standard total';
  const renewal=records.renew.find(item=>row.registrar&&item.registrar===row.registrar);
@@ -135,6 +157,15 @@ async function loadOffer(op,row,token){const key=promoKey(op,row);if(offers.has(
  try{const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),8000);let data;try{data=await fetchJSON(API+'/api/v1?registrar='+encodeURIComponent(row.registrar)+'&domain='+encodeURIComponent(suffix)+'&order='+op,ctl.signal)}finally{clearTimeout(t)}if(token!==requestId)return;offers.set(key,data)}catch{if(token===requestId)offers.set(key,null)}finally{if(token===requestId){pending.delete(key);if(opened===op)paint()}}}
 function requestShownOffers(){if(!opened)return;const op=opened,token=requestId;const rows=sorted(op,preferredCurrency()).slice(0,8).filter(({row})=>row.promocode?.[op]===true&&!offers.has(promoKey(op,row))&&!pending.has(promoKey(op,row)));let cursor=0;async function next(){while(cursor<rows.length&&token===requestId){const {row}=rows[cursor++];await loadOffer(op,row,token)}}for(let i=0;i<Math.min(3,rows.length);i++)next()}
 if(mobileToggle&&mobileDialog){mobileToggle.addEventListener('click',()=>{if(mobileToggle.hidden)return;previousFocus=document.activeElement;mobileDialog.hidden=false;document.body.style.overflow='hidden';if(!opened||!sorted(opened,preferredCurrency()).length)opened=operations.find(op=>sorted(op,preferredCurrency()).length)||null;paint();requestShownOffers();mobileClose?.focus()});mobileClose?.addEventListener('click',closeMobile);mobileDialog.addEventListener('click',e=>{if(e.target===mobileDialog)closeMobile()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!mobileDialog.hidden){e.preventDefault();closeMobile()}})}
+const mobileViewport=matchMedia('(max-width:760px)');
+mobileViewport.addEventListener('change',()=>{if(!mobileViewport.matches)closeMobile()});
+mobileDialog?.addEventListener('keydown',event=>{
+ if(event.key!=='Tab')return;
+ const controls=[...mobileDialog.querySelectorAll('button:enabled,select:enabled,a[href]')].filter(el=>el.getClientRects().length);
+ const first=controls[0],last=controls.at(-1);
+ if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus()}
+ else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus()}
+});
 async function update(name,force=false){
  const next=String(name||'').toLowerCase().replace(/\.$/,'');
  if(domain===next&&!force&&!priceError){paint();return}
