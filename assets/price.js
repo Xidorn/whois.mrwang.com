@@ -49,7 +49,54 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 function validURL(x){try{const u=new URL(x);return /^https?:$/.test(u.protocol)?u.href:null}catch{return null}}
 async function fetchJSON(url,signal){const res=await fetch(url,{signal,headers:{Accept:'application/json'},cache:'no-store'});if(!res.ok)throw Error(String(res.status));return res.json()}
 function extractRates(j){const d=j?.data??j;let items=[];if(Array.isArray(d))items=d;else if(Array.isArray(d?.currencies))items=d.currencies;else if(Array.isArray(d?.list))items=d.list;else if(d&&typeof d==='object')items=Object.entries(d).map(([k,v])=>v&&typeof v==='object'?{currency:k,...v}:{currency:k,rate_cny:v});const r={CNY:1};for(const v of items){const c=String(v?.currency||v?.code||v?.currency_code||'').toUpperCase(),n=Number(v?.rate_cny??v?.rateCny);if(/^[A-Z]{3}$/.test(c)&&n>0&&Number.isFinite(n))r[c]=n}return r}
-function preferredCurrency(){const c=LC[language()]||'USD';return rates[c]>0?c:'USD'}
+const currencies=['USD','CNY','EUR','GBP','JPY','CAD','AUD','HKD','SGD','INR','KRW','BRL','IDR'];
+let currencyChoice='';
+try{const saved=localStorage.getItem('whoisPriceCurrency');if(currencies.includes(saved))currencyChoice=saved}catch{}
+const quoteCache=new Map();
+let rateCache=null,priceError=false;
+function cachedQuote(key){
+ if(quoteCache.has(key))return quoteCache.get(key);
+ try{return JSON.parse(sessionStorage.getItem('whois-quote:'+key)||'null')}catch{return null}
+}
+function saveQuote(key,entry){
+ quoteCache.set(key,entry);
+ try{sessionStorage.setItem('whois-quote:'+key,JSON.stringify(entry))}catch{}
+}
+try{rateCache=JSON.parse(sessionStorage.getItem('whois-quote-rates')||'null')}catch{}
+
+const currencySelect=document.createElement('select');
+const mobileCurrencySelect=document.createElement('select');
+for(const select of [currencySelect,mobileCurrencySelect]){
+ select.className='quote-currency';
+ select.onchange=()=>{
+  currencyChoice=select.value;
+  try{localStorage.setItem('whoisPriceCurrency',currencyChoice)}catch{}
+  paint();requestShownOffers();
+ };
+}
+widget.prepend(currencySelect);
+mobileRail?.before(mobileCurrencySelect);
+const retryPrice=document.createElement('button');
+retryPrice.type='button';
+retryPrice.className='export-action';
+retryPrice.hidden=true;
+widget.before(retryPrice);
+retryPrice.onclick=()=>update(domain,true);
+function currencyOptions(){
+ const native=Object.values(records).flat().map(r=>String(r.currency||'').toUpperCase()).filter(c=>/^[A-Z]{3}$/.test(c));
+ return [...new Set([...currencies.filter(c=>rates[c]>0),...native])];
+}
+function preferredCurrency(){
+ const options=currencyOptions(), p=currencyChoice||LC[language()]||'USD';
+ return options.includes(p)?p:options.includes('USD')?'USD':options[0]||'CNY';
+}
+function syncCurrency(select){
+ const label=language()==='zh'?'报价币种':language()==='zh-Hant'?'報價幣別':'Quote currency';
+ select.setAttribute('aria-label',label);
+ select.replaceChildren(new Option(label,''),...currencyOptions().map(c=>new Option(c,c)));
+ select.value=currencyOptions().includes(currencyChoice)?currencyChoice:'';
+}
+
 function convert(row,op,currency){const original=finite(row?.[op]),cny=finite(row?.[op+'_cny']),native=String(row?.currency||'').toUpperCase();if(original===null&&cny===null)return null;if(currency===native&&original!==null)return original;if(currency==='CNY'&&cny!==null)return cny;if(cny!==null&&rates[currency]>0)return cny/rates[currency];return null}
 function convertPromo(promo,cur){const v=finite(promo?.price),cny=finite(promo?.price_cny),native=String(promo?.currency||'').toUpperCase();if(cur===native&&v!==null)return v;if(cur==='CNY'&&cny!==null)return cny;if(cny!==null&&rates[cur]>0)return cny/rates[cur];return null}
 function format(v,cur){if(v===null)return '—';try{return new Intl.NumberFormat(LO[language()]||'en-US',{style:'currency',currency:cur,maximumFractionDigits:cur==='JPY'?0:2}).format(v)}catch{return cur+' '+v.toFixed(2)}}
@@ -70,20 +117,74 @@ function collapse(){detail.hidden=true;opened=null;buttons.forEach(b=>{b.classLi
 function copyHandler(e){const b=e.target.closest('[data-promo-copy]');if(!b)return;const code=b.dataset.promoCopy;if(!code)return;copyText(code).then(()=>{b.classList.add('is-copied');b.title=pt(5);b.setAttribute('aria-label',pt(5)+': '+code);const feedback=b.closest('.promo-code-line')?.querySelector('.promo-feedback');if(feedback)feedback.textContent=pt(5);window.showToast?.(pt(5),'success')}).catch(()=>{b.title=pt(4);window.showToast?.(window.toastText?.('copyFailed')||'Copy failed','error')})}
 detail.addEventListener('click',copyHandler);mobileDetails?.addEventListener('click',copyHandler);
 function syncMobile(){if(!mobileRail)return;const cur=preferredCurrency();mobileRail.replaceChildren();for(let i=0;i<operations.length;i++){const op=operations[i],list=sorted(op,cur),b=document.createElement('button');b.type='button';b.disabled=!list.length;b.className=opened===op?'is-active':'';const caption=document.createElement('small'),price=document.createElement('strong');caption.textContent=tt(i);price.textContent=format(list.length?list[0].value:null,cur);price.dir='ltr';b.append(caption,price);b.addEventListener('click',()=>{opened=op;paint();requestShownOffers()});mobileRail.append(b)}if(mobileDetails)mobileDetails.innerHTML=opened?detail.innerHTML:''}
-function paint(){const cur=preferredCurrency();let any=false;buttons.forEach((b,i)=>{const op=operations[i],list=sorted(op,cur),v=list.length?list[0].value:null;b.querySelector('.price-kind-label').textContent=tt(i);b.querySelector('.price-kind-value').textContent=format(v,cur);b.disabled=!list.length;b.title=tt(i)+' · '+format(v,cur);b.setAttribute('aria-label',tt(i)+' '+format(v,cur)+' · '+tt(9));b.classList.toggle('is-active',opened===op);b.setAttribute('aria-expanded',String(opened===op));if(list.length)any=true});widget.hidden=!any;if(mobileToggle)mobileToggle.hidden=!any;if(mobileLabel)mobileLabel.textContent=tt(9);if(mobileTitle)mobileTitle.textContent=tt(3)+(suffix?' · .'+suffix:'');if(!any){closeMobile();collapse();return}if(!opened){detail.hidden=true;syncMobile();return}const list=sorted(opened,cur);if(!list.length){collapse();return}detail.hidden=false;const show=list.slice(0,8);
- const table=show.map(({row,value})=>{const name=esc(row.registrarname||row.registrar||'—'),url=validURL(row.registrarweb),hasPromo=row.promocode?.[opened]===true;return `<div class="quote-row"><span class="quote-name">${url?`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer nofollow">${name}</a>`:name}</span><div class="quote-values">${hasPromo?promoMarkup(opened,row,value,cur):''}<strong class="quote-price${hasPromo&&promoCandidate(offers.get(promoKey(opened,row)),cur,value)?' quote-price-suppressed':''}" dir="ltr">${esc(format(value,cur))}</strong></div></div>`}).join('');
+function holdingCost(row,register,cur){
+ const label=language()==='zh'?'标准价合计':language()==='zh-Hant'?'標準價合計':'Standard total';
+ const renewal=records.renew.find(item=>row.registrar&&item.registrar===row.registrar);
+ const renew=renewal?convert(renewal,'renew',cur):null;
+ if(renew===null)return '';
+ const unit=language()==='zh'||language()==='zh-Hant'?'年':' yr';
+ return '<small class="quote-holding">'+esc(label+' · 2'+unit+' '+format(register+renew,cur)+' · 3'+unit+' '+format(register+2*renew,cur))+'</small>';
+}
+function paint(){syncCurrency(currencySelect);syncCurrency(mobileCurrencySelect);retryPrice.hidden=!priceError;retryPrice.textContent=language()==='zh'?'报价获取失败，重试':language()==='zh-Hant'?'報價取得失敗，重試':'Price lookup failed. Retry';const cur=preferredCurrency();let any=false;buttons.forEach((b,i)=>{const op=operations[i],list=sorted(op,cur),v=list.length?list[0].value:null;b.querySelector('.price-kind-label').textContent=tt(i);b.querySelector('.price-kind-value').textContent=format(v,cur);b.disabled=!list.length;b.title=tt(i)+' · '+format(v,cur);b.setAttribute('aria-label',tt(i)+' '+format(v,cur)+' · '+tt(9));b.classList.toggle('is-active',opened===op);b.setAttribute('aria-expanded',String(opened===op));if(list.length)any=true});widget.hidden=!any;if(mobileToggle)mobileToggle.hidden=!any;if(mobileLabel)mobileLabel.textContent=tt(9);if(mobileTitle)mobileTitle.textContent=tt(3)+(suffix?' · .'+suffix:'');if(!any){closeMobile();collapse();return}if(!opened){detail.hidden=true;syncMobile();return}const list=sorted(opened,cur);if(!list.length){collapse();return}detail.hidden=false;const show=list.slice(0,8);
+ const table=show.map(({row,value})=>{const name=esc(row.registrarname||row.registrar||'—'),url=validURL(row.registrarweb),hasPromo=row.promocode?.[opened]===true;return `<div class="quote-row"><span class="quote-name">${url?`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer nofollow">${name}</a>`:name}${opened==='register'?holdingCost(row,value,cur):''}</span><div class="quote-values">${hasPromo?promoMarkup(opened,row,value,cur):''}<strong class="quote-price${hasPromo&&promoCandidate(offers.get(promoKey(opened,row)),cur,value)?' quote-price-suppressed':''}" dir="ltr">${esc(format(value,cur))}</strong></div></div>`}).join('');
  const updated=show.map(v=>v.row.updatedtime).filter(Boolean).sort().at(-1)||'—';const source=API+'/api/v1?domain='+encodeURIComponent(suffix)+'&order='+opened;
  detail.innerHTML=`<div class="quote-header"><strong>${esc(tt(3))} <span dir="ltr">.${esc(suffix)}</span> · ${esc(tt(operations.indexOf(opened)))}</strong><small>${esc(cur)}</small></div><p class="quote-note">${esc(tt(5))}</p><div class="quote-column"><div class="quote-head"><span>${esc(tt(4))}</span><span>${esc(tt(operations.indexOf(opened)))}</span></div>${table}</div><div class="quote-footer"><span>${esc(tt(7))}: ${esc(updated)} (UTC+8)</span><a href="${esc(source)}" rel="noopener noreferrer nofollow" target="_blank">${esc(tt(6))}</a></div>`;
  syncMobile();
 }
 async function loadOffer(op,row,token){const key=promoKey(op,row);if(offers.has(key)||pending.has(key))return;pending.add(key);
- try{const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),8000);let data;try{data=await fetchJSON(API+'/api/v1?registrar='+encodeURIComponent(row.registrar)+'&domain='+encodeURIComponent(suffix)+'&order='+op,ctl.signal)}finally{clearTimeout(t)}if(token!==requestId)return;offers.set(key,data)}catch{if(token===requestId)offers.set(key,null)}finally{pending.delete(key);if(token===requestId&&opened===op)paint()}}
+ try{const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),8000);let data;try{data=await fetchJSON(API+'/api/v1?registrar='+encodeURIComponent(row.registrar)+'&domain='+encodeURIComponent(suffix)+'&order='+op,ctl.signal)}finally{clearTimeout(t)}if(token!==requestId)return;offers.set(key,data)}catch{if(token===requestId)offers.set(key,null)}finally{if(token===requestId){pending.delete(key);if(opened===op)paint()}}}
 function requestShownOffers(){if(!opened)return;const op=opened,token=requestId;const rows=sorted(op,preferredCurrency()).slice(0,8).filter(({row})=>row.promocode?.[op]===true&&!offers.has(promoKey(op,row))&&!pending.has(promoKey(op,row)));let cursor=0;async function next(){while(cursor<rows.length&&token===requestId){const {row}=rows[cursor++];await loadOffer(op,row,token)}}for(let i=0;i<Math.min(3,rows.length);i++)next()}
 if(mobileToggle&&mobileDialog){mobileToggle.addEventListener('click',()=>{if(mobileToggle.hidden)return;previousFocus=document.activeElement;mobileDialog.hidden=false;document.body.style.overflow='hidden';if(!opened||!sorted(opened,preferredCurrency()).length)opened=operations.find(op=>sorted(op,preferredCurrency()).length)||null;paint();requestShownOffers();mobileClose?.focus()});mobileClose?.addEventListener('click',closeMobile);mobileDialog.addEventListener('click',e=>{if(e.target===mobileDialog)closeMobile()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!mobileDialog.hidden){e.preventDefault();closeMobile()}})}
-async function update(name){const next=String(name||'').toLowerCase().replace(/\.$/,'');if(domain===next){paint();return}domain=next;const token=++requestId;suffix='';records={register:[],renew:[],transfer:[]};offers.clear();pending.clear();collapse();closeMobile();widget.hidden=true;if(mobileToggle)mobileToggle.hidden=true;detail.replaceChildren();controller?.abort();controller=new AbortController();const ctl=controller;const parts=next.split('.');if(parts.length<2)return;
- const compound=new Set(['co.uk','org.uk','me.uk','ac.uk','gov.uk','com.cn','net.cn','org.cn','gov.cn','com.au','net.au','org.au','edu.au','co.jp','ne.jp','or.jp','com.br','com.mx','com.tr','co.kr','or.kr','co.in','com.sg','com.hk','com.tw','com.my','co.nz','com.ar','com.pl','co.za','com.ua','com.sa']);
- const last2=parts.slice(-2).join('.'),ext=parts.length>=3&&compound.has(last2)?last2:parts.at(-1),timer=setTimeout(()=>ctl.abort(),9000);
- try{const [rateResult,...results]=await Promise.allSettled([fetchJSON(API+'/api/currencies',ctl.signal),...operations.map(op=>fetchJSON(API+'/api/v1?domain='+encodeURIComponent(ext)+'&order='+op,ctl.signal))]);if(token!==requestId)return;rates=rateResult.status==='fulfilled'?extractRates(rateResult.value):{CNY:1};const rows={register:[],renew:[],transfer:[]};results.forEach((r,i)=>{if(r.status==='fulfilled'&&r.value?.code===100&&Array.isArray(r.value?.data?.price)){const op=operations[i];rows[op]=r.value.data.price.filter(v=>v&&typeof v==='object'&&finite(v[op])!==null)}});if(Object.values(rows).some(x=>x.length)){suffix=ext;records=rows}paint()}catch{if(token===requestId){widget.hidden=true;collapse()}}finally{clearTimeout(timer)}}
+async function update(name,force=false){
+ const next=String(name||'').toLowerCase().replace(/\.$/,'');
+ if(domain===next&&!force&&!priceError){paint();return}
+ domain=next;
+ const token=++requestId;
+ suffix='';
+ records={register:[],renew:[],transfer:[]};
+ offers.clear();pending.clear();collapse();closeMobile();
+ priceError=false;
+ widget.hidden=true;
+ retryPrice.hidden=true;
+ if(mobileToggle)mobileToggle.hidden=true;
+ detail.replaceChildren();
+ controller?.abort();
+ controller=new AbortController();
+ const ctl=controller;
+ if(!next.includes('.'))return;
+ const catalog=await WhoisSuffixes.load();
+ if(token!==requestId)return;
+ const ext=WhoisSuffixes.match(next,catalog);
+ const expires=Date.now();
+ const cached=cachedQuote(ext);
+ const requests=operations.map(op=>!force&&cached?.until>expires&&cached.rows[op]?.length?
+   Promise.resolve(cached.rows[op]):
+   fetchJSON(API+'/api/v1?domain='+encodeURIComponent(ext)+'&order='+op,ctl.signal).then(value=>{
+    if(value?.code!==100||!Array.isArray(value?.data?.price))throw new Error('Pricing response');
+    return value.data.price.filter(row=>row&&typeof row==='object'&&(finite(row[op])!==null||finite(row[op+'_cny'])!==null));
+   }));
+ const timer=setTimeout(()=>ctl.abort(),9000);
+ try{
+  const rateRequest=rateCache?.until>expires?Promise.resolve(rateCache.rates):
+   fetchJSON(API+'/api/currencies',ctl.signal).then(extractRates);
+  const [rateResult,...results]=await Promise.allSettled([rateRequest,...requests]);
+  if(token!==requestId)return;
+  if(rateResult.status==='fulfilled'){
+   rates=rateResult.value;
+   if(Object.keys(rates).length>1){
+    rateCache={rates,until:Date.now()+3600000};
+    try{sessionStorage.setItem('whois-quote-rates',JSON.stringify(rateCache))}catch{}
+   }
+  }
+  results.forEach((result,i)=>{if(result.status==='fulfilled')records[operations[i]]=result.value});
+  if(Object.values(records).some(rows=>rows.length)){
+   suffix=ext;
+   saveQuote(ext,{rows:records,until:Date.now()+300000});
+  }
+  priceError=results.some(result=>result.status==='rejected');
+  paint();
+ }finally{clearTimeout(timer)}
+}
 buttons.forEach((b,i)=>b.addEventListener('click',()=>{if(b.disabled)return;opened=opened===operations[i]?null:operations[i];paint();requestShownOffers()}));
 window.updateDomainPrice=update;window.renderPriceForLanguage=paint;
 if(typeof currentData!=='undefined'&&currentData)update(currentData.domain||domain);

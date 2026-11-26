@@ -1,4 +1,3 @@
-const API='https://api.mrwang.com/whois.php?domain=';
 const FEEDBACK_TEXT={"en": {"retry": "Try again", "timeout": "The request took too long. Please try again.", "requestFailed": "Unable to retrieve domain information. Please retry.", "expiring": "Expiration approaching", "expired": "Expired"}, "zh": {"retry": "重新查询", "timeout": "查询超时，请重试。", "requestFailed": "暂时无法获取域名信息，请重试。", "expiring": "即将到期", "expired": "已过期"}, "de": {"retry": "Erneut versuchen", "timeout": "Die Anfrage hat zu lange gedauert. Bitte erneut versuchen.", "requestFailed": "Domaininformationen konnten nicht abgerufen werden. Bitte erneut versuchen.", "expiring": "Ablaufdatum naht", "expired": "Abgelaufen"}, "fr": {"retry": "Réessayer", "timeout": "La requête a expiré. Veuillez réessayer.", "requestFailed": "Impossible de récupérer les données du domaine. Veuillez réessayer.", "expiring": "Expiration proche", "expired": "Expiré"}, "ja": {"retry": "再試行", "timeout": "応答がタイムアウトしました。再試行してください。", "requestFailed": "ドメイン情報を取得できませんでした。もう一度お試しください。", "expiring": "期限が近づいています", "expired": "期限切れ"}, "es": {"retry": "Reintentar", "timeout": "La solicitud tardó demasiado. Vuelve a intentarlo.", "requestFailed": "No se pudo obtener la información del dominio. Inténtalo de nuevo.", "expiring": "Próximo a vencer", "expired": "Vencido"}};
 
 Object.assign(FEEDBACK_TEXT,{"pt": {"retry": "Tentar novamente", "timeout": "A solicitação demorou demais. Tente novamente.", "requestFailed": "Não foi possível obter os dados do domínio. Tente novamente.", "expiring": "A expiração está próxima", "expired": "Expirado"}, "it": {"retry": "Riprova", "timeout": "La richiesta ha impiegato troppo tempo. Riprova.", "requestFailed": "Impossibile recuperare i dati del dominio. Riprova.", "expiring": "Scadenza imminente", "expired": "Scaduto"}, "ko": {"retry": "다시 시도", "timeout": "요청 시간이 초과되었습니다. 다시 시도해 주세요.", "requestFailed": "도메인 정보를 가져올 수 없습니다. 다시 시도해 주세요.", "expiring": "만료 임박", "expired": "만료됨"}, "ru": {"retry": "Повторить", "timeout": "Время ожидания запроса истекло. Повторите попытку.", "requestFailed": "Не удалось получить данные домена. Повторите запрос.", "expiring": "Скоро истекает", "expired": "Срок истёк"}, "ar": {"retry": "إعادة المحاولة", "timeout": "استغرق الطلب وقتًا أطول من المتوقع. حاول مجددًا.", "requestFailed": "تعذّر جلب معلومات النطاق. حاول مجددًا.", "expiring": "اقترب موعد الانتهاء", "expired": "منتهي الصلاحية"}, "hi": {"retry": "फिर प्रयास करें", "timeout": "अनुरोध में बहुत समय लगा। फिर प्रयास करें।", "requestFailed": "डोमेन जानकारी प्राप्त नहीं हुई। फिर प्रयास करें।", "expiring": "समाप्ति निकट है", "expired": "समाप्त हो गया"}, "id": {"retry": "Coba lagi", "timeout": "Permintaan terlalu lama. Silakan coba lagi.", "requestFailed": "Informasi domain tidak dapat diperoleh. Coba lagi.", "expiring": "Segera kedaluwarsa", "expired": "Kedaluwarsa"}});
@@ -27,7 +26,7 @@ const EXT_INPUT_LABELS={'zh-Hant':'網域名稱',"pt": "Nome de domínio", "it":
 function detectLang(){let saved='';try{saved=localStorage.getItem('whoisLang')||''}catch(e){}if(LANGS[saved])return saved;const n=(navigator.language||'en').toLowerCase();const code=n.split('-')[0];if(code==='zh'&&(/tw|hk|mo|hant/.test(n)))return 'zh-Hant';return LANGS[n]?n:(LANGS[code]?code:'en')}let lang=detectLang(),currentData=null;const t=k=>(EXT_INPUT_LABELS[lang]&&k==='domainInputLabel'?EXT_INPUT_LABELS[lang]:({en:{domainInputLabel:'Domain name',rawWhois:"Raw WHOIS",rawRdap:"Raw RDAP"},zh:{domainInputLabel:'域名',rawWhois:"原始 WHOIS",rawRdap:"原始 RDAP"},de:{domainInputLabel:'Domainname',rawWhois:"WHOIS-Rohdaten",rawRdap:"RDAP-Rohdaten"},fr:{domainInputLabel:'Nom de domaine',rawWhois:"WHOIS brut",rawRdap:"RDAP brut"},ja:{domainInputLabel:'ドメイン名',rawWhois:"WHOIS 生データ",rawRdap:"RDAP 生データ"},es:{domainInputLabel:'Nombre de dominio',rawWhois:"WHOIS sin procesar",rawRdap:"RDAP sin procesar"},'zh-Hant':{domainInputLabel:'網域名稱',rawWhois:'原始 WHOIS',rawRdap:'原始 RDAP'}}[lang]?.[k]||LANGS[lang][k]||LANGS.en[k]||k));const sel=document.getElementById('langSelect');populateLanguageSelect(sel,LANGS);const GROUP_TITLES={'zh-Hant':['註冊與註冊商','DNS 與網域狀態'],en:['Registration & Registrar','DNS & Domain Status'],zh:['注册与注册商','DNS 与域名状态'],de:['Registrierung & Registrar','DNS & Domainstatus'],fr:['Enregistrement & bureau','DNS & statut du domaine'],ja:['登録・レジストラ','DNS・ドメイン状態'],es:['Registro y registrador','DNS y estado del dominio']};Object.assign(GROUP_TITLES,{"pt": ["Registro e registrador", "DNS e estado do domínio"], "it": ["Registrazione e registrar", "DNS e stato del dominio"], "ko": ["등록 및 등록기관", "DNS 및 도메인 상태"], "ru": ["Регистрация и регистратор", "DNS и статус домена"], "ar": ["التسجيل والمسجّل", "DNS وحالة النطاق"], "hi": ["पंजीकरण और रजिस्ट्रार", "DNS और डोमेन स्थिति"], "id": ["Pendaftaran dan registrar", "DNS dan status domain"]});
 function applyLang(){document.documentElement.lang=lang==='zh'?'zh-CN':(lang==='zh-Hant'?'zh-TW':lang);document.documentElement.dir=lang==='ar'?'rtl':'ltr';sel.value=lang;translateLanguageGroups(sel,lang);translateThemes();renderBrand(lang);document.getElementById('domainInput').setAttribute('aria-label',t('domainInputLabel'));document.querySelectorAll('[data-i18n]').forEach(el=>{const v=t(el.dataset.i18n);if(v)el.textContent=v});document.querySelector('[data-i18n=identityGroup]').textContent=(GROUP_TITLES[lang]||GROUP_TITLES.en)[0];document.querySelector('[data-i18n=technicalGroup]').textContent=(GROUP_TITLES[lang]||GROUP_TITLES.en)[1];if(currentData)render(currentData);window.renderPriceForLanguage?.()}sel.onchange=()=>{lang=sel.value;try{localStorage.setItem('whoisLang',lang)}catch(e){}applyLang()};
 function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}function safeUrl(v){try{const u=new URL(v);return /^https?:$/.test(u.protocol)?u.href:''}catch{return''}}
-let rawPath='';try{rawPath=decodeURIComponent(location.pathname.replace(/^\/+|\/+$/g,''))}catch{rawPath=''}const domain=cleanDomain(rawPath);document.getElementById('domainInput').value=domain;document.getElementById('searchForm').onsubmit=e=>{e.preventDefault();const d=cleanDomain(document.getElementById('domainInput').value);if(d)location.href=searchUrl(d)};
+let rawPath='';try{rawPath=decodeURIComponent(location.pathname.replace(/^\/+|\/+$/g,''))}catch{rawPath=''}const queryDomain=new URLSearchParams(location.search).get('domain');const domain=cleanDomain(location.pathname==='/lookup.html'?queryDomain:rawPath);document.getElementById('domainInput').value=domain;document.getElementById('searchForm').onsubmit=e=>{e.preventDefault();const d=cleanDomain(document.getElementById('domainInput').value);if(d)location.href=searchUrl(d)};
 function fmtDate(v){return window.WhoisTimezone.format(v)}
 function humanDuration(s){
  if(!s)return '';
@@ -57,15 +56,9 @@ function humanDuration(s){
  return parts.join(['zh','zh-Hant','ja','ko','ar','hi'].includes(lang)?'':' ')||(vals.some(v=>v!==undefined)?`0${unit[2]}`:source);
 }
 // Display elapsed/remaining CALENDAR duration to the day, rather than a cached API string.
-function dateOnlyUTC(value){
- if(!value)return null;
- const raw=String(value).trim();
- let date;
- if(/^\d{4}-\d{2}-\d{2}$/.test(raw))date=new Date(raw+'T00:00:00Z');
- else if(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(raw))date=new Date(raw.replace(' ','T')+'Z');
- else date=new Date(raw);
- if(!Number.isFinite(date.getTime()))return null;
- return new Date(Date.UTC(date.getUTCFullYear(),date.getUTCMonth(),date.getUTCDate()));
+function calendarDay(value){
+ const day=WhoisTimezone.day(value);
+ return day ? new Date(day+'T00:00:00Z') : null;
 }
 function plusCalendarMonths(date,n){
  const y=date.getUTCFullYear(),m=date.getUTCMonth(),day=date.getUTCDate();
@@ -74,7 +67,7 @@ function plusCalendarMonths(date,n){
  return new Date(Date.UTC(first.getUTCFullYear(),first.getUTCMonth(),Math.min(day,last)));
 }
 function calendarDuration(startValue,endValue){
- const start=dateOnlyUTC(startValue),end=dateOnlyUTC(endValue);
+ const start=calendarDay(startValue),end=calendarDay(endValue);
  if(!start||!end||end<start)return '';
  // Derive year/month boundary using the same calendar anchor; no fixed 30-day month approximation.
  let years=0;
@@ -87,11 +80,11 @@ function calendarDuration(startValue,endValue){
  pieces.push(days+'D');return pieces.join(' ');
 }
 function exactRelative(iso,fallback,direction){
- const today=new Date(),utcToday=new Date(Date.UTC(today.getUTCFullYear(),today.getUTCMonth(),today.getUTCDate()));
+ const utcToday=calendarDay(new Date());
  const exact=direction==='remaining'?calendarDuration(utcToday,iso):calendarDuration(iso,utcToday);
- return humanDuration(exact || (iso && dateOnlyUTC(iso) ? '' : fallback));
+ return humanDuration(exact || (iso && calendarDay(iso) ? '' : fallback));
 }
-function stateOf(d){if(d.reserved===true)return'reserved';if(d.rateLimited===true||d.unknown===true)return'unknown';if(d.registered===true)return'registered';if(d.registered===false)return'available';return'unknown'}function row(k,v,link=false){if(v===undefined||v===null||v==='')return'';const url=link?safeUrl(v):'';return `<div class="row"><div class="key">${esc(k)}</div><div class="value">${url?`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(v)}</a>`:esc(v)}</div></div>`}function registrarRow(label,name,url){if(!name)return '';const href=safeUrl(url);const value=href?`<a href="${esc(href)}" target="_blank" rel="noopener noreferrer" title="${esc(name)}">${esc(name)}</a>`:esc(name);return `<div class="row"><div class="key">${esc(label)}</div><div class="value">${value}</div></div>`}function setPanel(id,html){const el=document.getElementById(id);el.hidden=!html;if(html)el.querySelector('.panel-body').innerHTML=html}function metric(label,value,note='',tone='',progress=null){if(!value)return'';const cls=['expiry-15','expiry-7','expiry-3','expiry-1','expiry-past','age-15','age-7','age-3','age-1'].includes(tone)?' '+tone:'';const bar=progress===null?'':`<div class="expiry-progress" role="progressbar" aria-label="${esc(label)}" aria-valuemin="0" aria-valuemax="15" aria-valuenow="${Math.max(0,Math.min(15,progress))}" aria-valuetext="${esc(value)}"><span style="width:${Math.max(progress===0?2:0,Math.min(100,100*progress/15))}%"></span></div>`;return `<div class="metric${cls}"><div class="metric-label">${esc(label)}</div><div class="metric-value">${esc(value)}</div>${note?`<div class="metric-note">${esc(note)}</div>`:''}${bar}</div>`}function prettyRdap(v){if(!v)return'';if(typeof v==='object')return JSON.stringify(v,null,2);try{return JSON.stringify(JSON.parse(v),null,2)}catch{return String(v)}}
+function stateOf(d){return WhoisLookup.state(d)}function row(k,v,link=false){if(v===undefined||v===null||v==='')return'';const url=link?safeUrl(v):'';return `<div class="row"><div class="key">${esc(k)}</div><div class="value">${url?`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(v)}</a>`:esc(v)}</div></div>`}function registrarRow(label,name,url){if(!name)return '';const href=safeUrl(url);const value=href?`<a href="${esc(href)}" target="_blank" rel="noopener noreferrer" title="${esc(name)}">${esc(name)}</a>`:esc(name);return `<div class="row"><div class="key">${esc(label)}</div><div class="value">${value}</div></div>`}function setPanel(id,html){const el=document.getElementById(id);el.hidden=!html;if(html)el.querySelector('.panel-body').innerHTML=html}function metric(label,value,note='',tone='',progress=null){if(!value)return'';const cls=['expiry-15','expiry-7','expiry-3','expiry-1','expiry-past','age-15','age-7','age-3','age-1'].includes(tone)?' '+tone:'';const bar=progress===null?'':`<div class="expiry-progress" role="progressbar" aria-label="${esc(label)}" aria-valuemin="0" aria-valuemax="15" aria-valuenow="${Math.max(0,Math.min(15,progress))}" aria-valuetext="${esc(value)}"><span style="width:${Math.max(progress===0?2:0,Math.min(100,100*progress/15))}%"></span></div>`;return `<div class="metric${cls}"><div class="metric-label">${esc(label)}</div><div class="metric-value">${esc(value)}</div>${note?`<div class="metric-note">${esc(note)}</div>`:''}${bar}</div>`}function prettyRdap(v){if(!v)return'';if(typeof v==='object')return JSON.stringify(v,null,2);try{return JSON.stringify(JSON.parse(v),null,2)}catch{return String(v)}}
 const statusMap={'Client Transfer Prohibited':{'zh-Hant':'禁止用戶端移轉',zh:'禁止客户端转移',de:'Client-Transfer gesperrt',fr:'Transfert client interdit',ja:'クライアント転送禁止',es:'Transferencia de cliente prohibida'},'Client Update Prohibited':{'zh-Hant':'禁止用戶端更新',zh:'禁止客户端更新',de:'Client-Update gesperrt',fr:'Mise à jour client interdite',ja:'クライアント更新禁止',es:'Actualización de cliente prohibida'},'Client Delete Prohibited':{'zh-Hant':'禁止用戶端刪除',zh:'禁止客户端删除',de:'Client-Löschung gesperrt',fr:'Suppression client interdite',ja:'クライアント削除禁止',es:'Eliminación de cliente prohibida'},'Active':{'zh-Hant':'正常啟用',zh:'正常激活',de:'Aktiv',fr:'Actif',ja:'有効',es:'Activo'},'OK':{'zh-Hant':'正常',zh:'正常',de:'OK',fr:'OK',ja:'正常',es:'OK'}};Object.entries({"Active": ["Ativo", "Attivo", "활성", "Активен", "نشط", "सक्रिय", "Aktif"], "OK": ["Normal", "Normale", "정상", "Норма", "سليم", "सामान्य", "Normal"], "Client Transfer Prohibited": ["Transferência bloqueada", "Trasferimento bloccato", "이전 금지", "Перенос запрещён", "نقل النطاق محظور", "स्थानांतरण निषिद्ध", "Transfer dilarang"], "Client Delete Prohibited": ["Exclusão bloqueada", "Eliminazione bloccata", "삭제 금지", "Удаление запрещено", "حذف النطاق محظور", "हटाना निषिद्ध", "Penghapusan dilarang"], "Client Update Prohibited": ["Atualização bloqueada", "Modifica bloccata", "수정 금지", "Обновление запрещено", "تحديث النطاق محظور", "अपडेट निषिद्ध", "Pembaruan dilarang"]}).forEach(([status,values])=>values.forEach((label,i)=>{statusMap[status][["pt", "it", "ko", "ru", "ar", "hi", "id"][i]]=label}));const STATUS_EXPLANATIONS={"ok":{"en":"Registration is active.","zh":"注册状态正常。","zh-Hant":"註冊狀態正常。","de":"Registrierung ist aktiv.","fr":"Enregistrement actif.","ja":"登録は有効です。","es":"El registro está activo.","pt":"Registro ativo.","it":"Registrazione attiva.","ko":"등록이 활성 상태입니다.","ru":"Регистрация активна.","ar":"التسجيل نشط.","hi":"पंजीकरण सक्रिय है।","id":"Pendaftaran aktif."},"clienttransferprohibited":{"en":"Registrar transfer lock enabled.","zh":"注册商设置了域名转移锁。","zh-Hant":"註冊商已啟用網域轉移鎖。","de":"Transfersperre beim Registrar aktiv.","fr":"Transfert bloqué par le registrar.","ja":"レジストラ側で移管がロックされています。","es":"Transferencia bloqueada por el registrador.","pt":"Transferência bloqueada pelo registrador.","it":"Trasferimento bloccato dal registrar.","ko":"등록기관이 이전을 차단했습니다.","ru":"Регистратор запретил перенос.","ar":"نقل النطاق محظور من المسجّل.","hi":"रजिस्ट्रार ने स्थानांतरण रोका है।","id":"Transfer dikunci oleh registrar."},"clientupdateprohibited":{"en":"Registrar has restricted updates.","zh":"注册商限制了域名资料修改。","zh-Hant":"註冊商限制網域資料變更。","de":"Änderungen sind beim Registrar gesperrt.","fr":"Modifications bloquées par le registrar.","ja":"レジストラが変更を制限しています。","es":"El registrador restringe las actualizaciones.","pt":"O registrador restringe atualizações.","it":"Il registrar limita le modifiche.","ko":"등록기관이 수정을 제한합니다.","ru":"Регистратор запретил изменения.","ar":"المسجّل يقيّد التحديثات.","hi":"रजिस्ट्रार ने परिवर्तन सीमित किए हैं।","id":"Registrar membatasi pembaruan."},"clientdeleteprohibited":{"en":"Registrar has restricted deletion.","zh":"注册商限制了域名删除。","zh-Hant":"註冊商限制網域刪除。","de":"Löschen ist beim Registrar gesperrt.","fr":"Suppression bloquée par le registrar.","ja":"レジストラが削除を制限しています。","es":"El registrador restringe la eliminación.","pt":"O registrador restringe exclusão.","it":"Il registrar limita la cancellazione.","ko":"등록기관이 삭제를 제한합니다.","ru":"Регистратор запретил удаление.","ar":"المسجّل يقيّد الحذف.","hi":"रजिस्ट्रार ने हटाना सीमित किया है।","id":"Registrar membatasi penghapusan."},"servertransferprohibited":{"en":"Registry transfer lock enabled.","zh":"注册局限制了域名转移。","zh-Hant":"註冊局限制網域移轉。","de":"Transfersperre durch die Registry.","fr":"Transfert bloqué par le registre.","ja":"レジストリ側で移管がロックされています。","es":"Transferencia bloqueada por el registro.","pt":"Transferência bloqueada pelo registro.","it":"Trasferimento bloccato dal registro.","ko":"레지스트리가 이전을 차단했습니다.","ru":"Реестр запретил перенос.","ar":"السجل يقيّد النقل.","hi":"रजिस्ट्री ने स्थानांतरण रोका है।","id":"Transfer dikunci registri."},"serverupdateprohibited":{"en":"Registry has restricted updates.","zh":"注册局限制了域名修改。","zh-Hant":"註冊局限制網域變更。"},"serverdeleteprohibited":{"en":"Registry has restricted deletion.","zh":"注册局限制了域名删除。","zh-Hant":"註冊局限制網域刪除。"},"pendingdelete":{"en":"Domain is in the deletion process.","zh":"域名正处于待删除流程。","zh-Hant":"網域正處於待刪除流程。"},"redemptionperiod":{"en":"Domain may be restorable through the registrar.","zh":"域名可能处于可通过注册商赎回的阶段。","zh-Hant":"網域可能仍可透過註冊商贖回。"},"pendingtransfer":{"en":"A registrar transfer is pending.","zh":"域名转移处理中。","zh-Hant":"網域移轉處理中。"},"inactive":{"en":"Domain is not delegated in DNS.","zh":"域名当前未委派到 DNS。","zh-Hant":"網域目前未委派至 DNS。"},"clienthold":{"en":"Registrar has suspended DNS delegation.","zh":"注册商暂停了 DNS 委派。","zh-Hant":"註冊商已暫停 DNS 委派。"},"serverhold":{"en":"Registry has suspended DNS delegation.","zh":"注册局暂停了 DNS 委派。","zh-Hant":"註冊局已暫停 DNS 委派。"},"active":{"en":"Domain is active.","zh":"域名处于正常活动状态。","zh-Hant":"網域處於正常啟用狀態。"}};
 
 /* V29: complete descriptions of common EPP states in all supported languages. */
@@ -108,16 +101,21 @@ const statusSub=txt=>{const code=String(txt).toLowerCase().replace(/[^a-z]/g,'')
 const SHARE_I18N={"en":["Share","Link copied","Copy query link"],"zh":["分享","链接已复制","复制查询链接"],"zh-Hant":["分享","連結已複製","複製查詢連結"],"de":["Teilen","Link kopiert","Abfragelink kopieren"],"fr":["Partager","Lien copié","Copier le lien"],"ja":["共有","リンクをコピーしました","検索リンクをコピー"],"es":["Compartir","Enlace copiado","Copiar enlace"],"pt":["Compartilhar","Link copiado","Copiar link"],"it":["Condividi","Link copiato","Copia link"],"ko":["공유","링크 복사됨","검색 링크 복사"],"ru":["Поделиться","Ссылка скопирована","Скопировать ссылку"],"ar":["مشاركة","تم نسخ الرابط","نسخ رابط البحث"],"hi":["साझा करें","लिंक कॉपी हुआ","खोज लिंक कॉपी करें"],"id":["Bagikan","Tautan disalin","Salin tautan"]};
 function shareLabel(i){return (SHARE_I18N[lang]||SHARE_I18N.en)[i]}
 function renderDates(d){let reg='';reg+=row(t('created'),fmtDate(d.creationDateISO8601||d.creationDate));reg+=row(t('expires'),fmtDate(d.expirationDateISO8601||d.expirationDate));reg+=row(t('updated'),fmtDate(d.updatedDateISO8601||d.updatedDate));reg+=row(t('availableDate'),fmtDate(d.availableDateISO8601||d.availableDate));setPanel('registrationPanel',reg);}
-function render(d){currentData=d;const displayDomain=d.domain||domain;document.title=`${displayDomain} | ${({en:'Domain Lookup',zh:'域名查询',de:'Domain-Abfrage',fr:'Recherche de domaine',ja:'ドメイン検索',es:'Consulta de dominios','zh-Hant':'網域查詢',pt:'Consulta de domínios',it:'Ricerca domini',ko:'도메인 조회',ru:'Поиск доменов',ar:'البحث عن النطاقات',hi:'डोमेन खोज',id:'Pencarian domain'}[lang])}`;document.getElementById('domainTitle').textContent=displayDomain;window.updateDomainPrice?.(displayDomain);const share=document.getElementById('shareLink');share.setAttribute('aria-label',shareLabel(2));share.title=shareLabel(2);const state=stateOf(d);const notice=document.getElementById('stateNotice');const nk=state==='reserved'?'reservedNotice':state==='available'?'availableNotice':state==='unknown'?'unknownNotice':'';notice.hidden=!nk;notice.innerHTML=nk?`<strong>${esc(t(state))}.</strong> ${esc(t(nk))}`:'';
-// Expiration emphasis belongs ONLY to the existing Expires In metric.
-// Use calendar dates in UTC, not seconds remaining, to avoid timezone-dependent tiers.
+function render(d){currentData=d;const displayDomain=d.domain||domain;document.title=`${displayDomain} | ${({en:'Domain Lookup',zh:'域名查询',de:'Domain-Abfrage',fr:'Recherche de domaine',ja:'ドメイン検索',es:'Consulta de dominios','zh-Hant':'網域查詢',pt:'Consulta de domínios',it:'Ricerca domini',ko:'도메인 조회',ru:'Поиск доменов',ar:'البحث عن النطاقات',hi:'डोमेन खोज',id:'Pencarian domain'}[lang])}`;document.getElementById('domainTitle').textContent=displayDomain;window.updateDomainPrice?.(displayDomain);const share=document.getElementById('shareLink');share.setAttribute('aria-label',shareLabel(2));share.title=shareLabel(2);const state=stateOf(d);const notice=document.getElementById('stateNotice');const nk=state==='reserved'?'reservedNotice':state==='available'?'availableNotice':state==='unknown'||state==='rateLimited'?'unknownNotice':'';notice.hidden=!nk;notice.innerHTML=nk?`<strong>${esc(state==='rateLimited'?WhoisLookup.message({kind:state},lang):t(state))}.</strong> ${esc(t(nk))}`:'';
+renderMetrics(d);
+renderDates(d);
+let rr='';rr+=registrarRow(t('registrar'),d.registrar,d.registrarURL);rr+=row(t('iana'),d.registrarIANAId);rr+=row(t('whoisServer'),d.registrarWHOISServer);rr+=row(t('rdapServer'),d.registrarRDAPServer,true);rr+=row(t('registryWebsite'),d.registryWebsite,true);rr+=row(t('registryWhois'),d.registryWHOISServer);rr+=row(t('registryRdap'),d.registryRDAPServer,true);setPanel('registrarPanel',rr);
+let dns='';if(Array.isArray(d.nameServers)&&d.nameServers.length){dns+=`<div class="row"><div class="key">${esc(t('nameServers'))}</div><div class="value nameserver-values">${d.nameServers.map(ns=>`<div class="dns-item">${esc(ns)}</div>`).join('')}</div></div>`}if(d.dnssecSigned!==null&&d.dnssecSigned!==undefined)dns+=row(t('dnssec'),d.dnssecSigned?t('signed'):t('unsigned'));setPanel('dnsPanel',dns);
+let statuses=Array.isArray(d.status)?d.status:[];if(!statuses.length&&state==='reserved')statuses=[{text:t('reserved'),url:''}];document.getElementById('statusList').innerHTML=statuses.map(s=>{const txt=typeof s==='string'?s:(s&&s.text||'');const u=s&&typeof s==='object'?safeUrl(s.url||''):'';const title=u?`<a class="status-direct-link" href="${esc(u)}" target="_blank" rel="noopener noreferrer" title="${esc(txt)}">${esc(txt)}</a>`:esc(txt);return `<div class="item"><div><div class="item-title">${title}</div>${statusSub(txt)?`<div class="item-sub">${esc(statusSub(txt))}</div>`:''}</div></div>`}).join('');document.getElementById('statusPanel').hidden=!statuses.length;
+const lifes=[];if(d.gracePeriod)lifes.push(t('grace'));if(d.redemptionPeriod)lifes.push(t('redemption'));if(d.pendingDelete)lifes.push(t('pendingDelete'));if(d.hold)lifes.push(t('hold'));if(d.inactive)lifes.push(t('inactive'));document.getElementById('lifecycleList').innerHTML=lifes.map(x=>`<div class="life"><span>${esc(x)}</span><span>${esc(t('yes'))}</span></div>`).join('');document.getElementById('lifecyclePanel').hidden=!lifes.length;document.getElementById('identityGroup').hidden=document.getElementById('registrationPanel').hidden&&document.getElementById('registrarPanel').hidden;document.getElementById('technicalGroup').hidden=document.getElementById('dnsPanel').hidden&&document.getElementById('statusPanel').hidden&&document.getElementById('lifecyclePanel').hidden;
+rawWhoisText=typeof d.whoisData==='string'?d.whoisData:'';rawRdapText=d.rdapData||'';const whoisRaw=document.getElementById('whoisRaw'),rdapRaw=document.getElementById('rdapRaw');whoisRaw.hidden=!rawWhoisText;rdapRaw.hidden=!rawRdapText;if(whoisRaw.open)document.getElementById('whoisText').textContent=rawWhoisText;else document.getElementById('whoisText').textContent='';if(rdapRaw.open)document.getElementById('rdapText').textContent=prettyRdap(rawRdapText);else document.getElementById('rdapText').textContent='';updateResultTools()}
+// Apply expiration tiers using calendar days in the selected time zone.
 function expiryTone(d){
- if(d.registered!==true)return '';
+ if(stateOf(d)!=='registered')return '';
  const raw=d.expirationDateISO8601||d.expirationDate;
- const date=dateOnlyUTC(raw);
+ const date=calendarDay(raw);
  if(!date||!Number.isFinite(date.getTime()))return '';
- const now=new Date();
- const today=Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate());
+ const today=+calendarDay(new Date());
  const days=Math.round((date.getTime()-today)/86400000);
  if(days<0)return 'expiry-past';
  if(days<=1)return 'expiry-1';
@@ -126,14 +124,12 @@ function expiryTone(d){
  if(days<=15)return 'expiry-15';
  return '';
 }
-// Newly registered domain accent. Use UTC calendar dates, same as expiry thresholds.
-// Do not treat unknown, reserved, future or missing registration dates as newly registered.
+// Apply the registration age accent using the same calendar as expiration.
 function ageTone(d){
- if(d.registered!==true)return '';
- const date=dateOnlyUTC(d.creationDateISO8601||d.creationDate);
+ if(stateOf(d)!=='registered')return '';
+ const date=calendarDay(d.creationDateISO8601||d.creationDate);
  if(!date||!Number.isFinite(date.getTime()))return '';
- const now=new Date();
- const today=Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate());
+ const today=+calendarDay(new Date());
  const days=Math.round((today-date.getTime())/86400000);
  if(days<0)return '';
  if(days<=1)return 'age-1';
@@ -144,25 +140,23 @@ function ageTone(d){
 }
 // A short 15-day remaining-time indicator, not a registration-cycle percentage.
 function expiryProgress(d){
- if(d.registered!==true)return null;
- const date=dateOnlyUTC(d.expirationDateISO8601||d.expirationDate);
+ if(stateOf(d)!=='registered')return null;
+ const date=calendarDay(d.expirationDateISO8601||d.expirationDate);
  if(!date||!Number.isFinite(date.getTime()))return null;
- const now=new Date(),today=Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate());
+ const today=+calendarDay(new Date());
  const days=Math.round((date.getTime()-today)/86400000);
  return days>15?null:Math.max(0,days);
 }
+function renderMetrics(d){
 let metrics='';
 metrics+=metric(t('domainAge'),exactRelative(d.creationDateISO8601||d.creationDate,d.createdAgo,'elapsed'),'',ageTone(d));
-metrics+=metric(t('expiresIn'),exactRelative(d.expirationDateISO8601||d.expirationDate,d.expiresIn,'remaining'),'',expiryTone(d),expiryProgress(d));
+const tone=expiryTone(d);
+const elapsedExpiry=tone==='expiry-past'?(lang==='zh'?'已过到期日':lang==='zh-Hant'?'已過到期日':'Past expiration date'):'';
+metrics+=metric(t('expiresIn'),elapsedExpiry||exactRelative(d.expirationDateISO8601||d.expirationDate,d.expiresIn,'remaining'),'',tone,elapsedExpiry?null:expiryProgress(d));
 metrics+=metric(t('updatedAgo'),exactRelative(d.updatedDateISO8601||d.updatedDate,d.updatedAgo,'elapsed'));
 if(!metrics)metrics+=metric(t('availableIn'),exactRelative(d.availableDateISO8601||d.availableDate,d.availableIn,'remaining'));
 const me=document.getElementById('metrics');me.innerHTML=metrics;me.hidden=!metrics;
-renderDates(d);
-let rr='';rr+=registrarRow(t('registrar'),d.registrar,d.registrarURL);rr+=row(t('iana'),d.registrarIANAId);rr+=row(t('whoisServer'),d.registrarWHOISServer);rr+=row(t('rdapServer'),d.registrarRDAPServer,true);rr+=row(t('registryWebsite'),d.registryWebsite,true);rr+=row(t('registryWhois'),d.registryWHOISServer);rr+=row(t('registryRdap'),d.registryRDAPServer,true);setPanel('registrarPanel',rr);
-let dns='';if(Array.isArray(d.nameServers)&&d.nameServers.length){dns+=`<div class="row"><div class="key">${esc(t('nameServers'))}</div><div class="value nameserver-values">${d.nameServers.map(ns=>`<div class="dns-item">${esc(ns)}</div>`).join('')}</div></div>`}if(d.dnssecSigned!==null&&d.dnssecSigned!==undefined)dns+=row(t('dnssec'),d.dnssecSigned?t('signed'):t('unsigned'));setPanel('dnsPanel',dns);
-let statuses=Array.isArray(d.status)?d.status:[];if(!statuses.length&&state==='reserved')statuses=[{text:t('reserved'),url:''}];document.getElementById('statusList').innerHTML=statuses.map(s=>{const txt=typeof s==='string'?s:(s&&s.text||'');const u=typeof s==='object'?safeUrl(s.url||''):'';const title=u?`<a class="status-direct-link" href="${esc(u)}" target="_blank" rel="noopener noreferrer" title="${esc(txt)}">${esc(txt)}</a>`:esc(txt);return `<div class="item"><div><div class="item-title">${title}</div>${statusSub(txt)?`<div class="item-sub">${esc(statusSub(txt))}</div>`:''}</div></div>`}).join('');document.getElementById('statusPanel').hidden=!statuses.length;
-const lifes=[];if(d.gracePeriod)lifes.push(t('grace'));if(d.redemptionPeriod)lifes.push(t('redemption'));if(d.pendingDelete)lifes.push(t('pendingDelete'));if(d.hold)lifes.push(t('hold'));if(d.inactive)lifes.push(t('inactive'));document.getElementById('lifecycleList').innerHTML=lifes.map(x=>`<div class="life"><span>${esc(x)}</span><span>${esc(t('yes'))}</span></div>`).join('');document.getElementById('lifecyclePanel').hidden=!lifes.length;document.getElementById('identityGroup').hidden=document.getElementById('registrationPanel').hidden&&document.getElementById('registrarPanel').hidden;document.getElementById('technicalGroup').hidden=document.getElementById('dnsPanel').hidden&&document.getElementById('statusPanel').hidden&&document.getElementById('lifecyclePanel').hidden;
-rawWhoisText=typeof d.whoisData==='string'?d.whoisData:'';rawRdapText=d.rdapData||'';const whoisRaw=document.getElementById('whoisRaw'),rdapRaw=document.getElementById('rdapRaw');whoisRaw.hidden=!rawWhoisText;rdapRaw.hidden=!rawRdapText;if(whoisRaw.open)document.getElementById('whoisText').textContent=rawWhoisText;else document.getElementById('whoisText').textContent='';if(rdapRaw.open)document.getElementById('rdapText').textContent=prettyRdap(rawRdapText);else document.getElementById('rdapText').textContent='';updateResultTools()}
+}
 document.getElementById('whoisRaw')?.addEventListener('toggle',e=>{if(e.currentTarget.open){const pre=document.getElementById('whoisText');if(!pre.textContent)pre.textContent=rawWhoisText}});document.getElementById('rdapRaw')?.addEventListener('toggle',e=>{if(e.currentTarget.open){const pre=document.getElementById('rdapText');if(!pre.textContent)pre.textContent=prettyRdap(rawRdapText)}});
 async function copyText(btn,text){const old=btn.textContent;try{await window.copyToClipboard(text);btn.textContent=t('copied');window.showToast?.(t('copied'),'success');setTimeout(()=>{if(btn.isConnected)btn.textContent=old},1000);return true}catch(e){window.showToast?.(window.toastText?.('copyFailed')||'Copy failed','error');return false}}document.querySelectorAll('[data-rawcopy]').forEach(btn=>btn.onclick=e=>{e.preventDefault();e.stopPropagation();copyText(btn,btn.dataset.rawcopy==='rdap'?document.getElementById('rdapText').textContent:document.getElementById('whoisText').textContent)});
 let requestController=null;let queryCompletedAt=null;let rawWhoisText='';let rawRdapText='';
@@ -171,49 +165,35 @@ function renderError(message,canRetry=true){
  const p=document.createElement('p');p.textContent=message;error.append(p);
  if(canRetry){const retry=document.createElement('button');retry.type='button';retry.className='retry-button';retry.textContent=feedback('retry');retry.addEventListener('click',load);error.append(retry)}
 }
-function apiPayload(json){
- if(json&&json.code===0&&json.data&&typeof json.data==='object')return json.data;
- if(json&&json.code===undefined&&typeof json==='object'&&(json.domain||json.registered!==undefined||json.unknown!==undefined||json.whoisData!==undefined||json.rdapData!==undefined))return json;
- throw new Error((json&&json.msg)||'API');
-}
-async function queryDomain(signal){
- const url=API+encodeURIComponent(domain)+'&json=1';
- const response=await fetch(url,{headers:{Accept:'application/json'},signal,cache:'no-store'});
- if(!response.ok)throw new Error('HTTP '+response.status);
- const text=await response.text();
- let json;try{json=JSON.parse(text)}catch{throw new Error('Invalid JSON response')}
- return apiPayload(json);
-}
 async function load(){
  const loading=document.getElementById('loading'),error=document.getElementById('error'),content=document.getElementById('content');
  if(requestController)return;
  currentData=null;
+ lifecycleRecord=null;
  try{applyLang()}catch(e){console.warn('Locale rendering:',e)}
  error.hidden=true;error.replaceChildren();content.hidden=true;loading.hidden=false;
  if(!domain||!validDomain(domain)){renderError(t('invalid'),false);return}
  const controller=new AbortController();requestController=controller;
- const timeout=setTimeout(()=>controller.abort(),20000);
+
  try{
   await new Promise(resolve=>requestAnimationFrame(resolve));
   // One merged API request keeps status interpretation identical to the backend for every TLD.
-  const payload=await queryDomain(controller.signal);
+  const payload=await WhoisLookup.query(domain,controller.signal);
   queryCompletedAt=new Date();
   loading.hidden=true;error.hidden=true;error.replaceChildren();content.hidden=false;
-  try{render(payload)}catch(err){
+  try{render(payload);rememberLifecycle(payload)}catch(err){
    console.error('Result rendering error',err);
-   currentData=payload;
-   content.hidden=true;renderError(feedback('requestFailed'));currentData=null;
+   content.hidden=true;renderError(WhoisLookup.message({kind:'render'},lang));currentData=null;
   }
+  if(!currentData)return;
   try{rememberDomain(domain)}catch(e){console.warn('Optional history unavailable',e)}
  }catch(err){
-  if(controller.signal.aborted||err?.name==='AbortError')renderError(feedback('timeout'));
-  else{console.error('Lookup failed',err);renderError(feedback('requestFailed'))}
+  if(err.kind!=='cancelled')renderError(WhoisLookup.message(err,lang));
  }finally{
-  clearTimeout(timeout);
   if(requestController===controller)requestController=null;
  }
 }
-load();
+window.addEventListener('DOMContentLoaded',load,{once:true});
 
 initThemePicker();
 
@@ -254,14 +234,40 @@ shareButton.addEventListener('click',async()=>{
 
 
 /* V29 lightweight controls: export, bookmark and verifiable query timestamp. */
+const resultToolLabels={
+ en:['Save domain','Remove saved domain','Download TXT','Download JSON','Queried at','Sources'],
+ zh:['收藏域名','取消收藏','下载 TXT','下载 JSON','查询时间','数据来源'],
+ 'zh-Hant':['收藏網域','取消收藏','下載 TXT','下載 JSON','查詢時間','資料來源']
+};
+const xt=i=>(resultToolLabels[lang]||resultToolLabels.en)[i];
+const lifecycleKey='whoisLifecycleV1';
+let lifecycleRecord=null;
+function rememberLifecycle(data){
+ lifecycleRecord=null;
+ const state=stateOf(data);
+ if(!['registered','reserved','available'].includes(state)){updateResultTools();return}
+ const stage=data.pendingDelete?'pendingDelete':data.redemptionPeriod?'redemption':data.gracePeriod?'grace':state;
+ let history={};
+ try{history=JSON.parse(localStorage.getItem(lifecycleKey)||'{}')||{}}catch{}
+ const previous=history[domain];
+ const now=queryCompletedAt.toISOString();
+ lifecycleRecord={stage,firstSeen:previous?.stage===stage&&previous.firstSeen?previous.firstSeen:now,lastSeen:now};
+ history[domain]=lifecycleRecord;
+ try{localStorage.setItem(lifecycleKey,JSON.stringify(Object.fromEntries(
+   Object.entries(history).sort((a,b)=>String(b[1]?.lastSeen).localeCompare(String(a[1]?.lastSeen))).slice(0,100)
+ )))}catch{}
+ updateResultTools();
+}
 function updateResultTools(){
  const saved=getFavorites().includes(cleanDomain(currentData?.domain||domain)),fav=document.getElementById('favoriteDomain');
- fav.setAttribute('aria-pressed',String(saved));fav.classList.toggle('is-saved',saved);fav.title=fav.getAttribute('aria-label')=xt(saved?1:0);
- for(const [id,key] of [['exportTxt',2],['exportJson',3]]){const b=document.getElementById(id);b.title=b.getAttribute('aria-label')=xt(key)}
+ fav.setAttribute('aria-pressed',String(saved));fav.classList.toggle('is-saved',saved);fav.title=xt(saved?1:0);fav.setAttribute('aria-label',fav.title);
+ for(const [id,key] of [['exportTxt',2],['exportJson',3]]){const b=document.getElementById(id);b.title=xt(key);b.setAttribute('aria-label',b.title)}
  const sources=[currentData?.whoisData?'WHOIS':'',currentData?.rdapData?'RDAP':''].filter(Boolean).join(' + ')||'API';
  const date=queryCompletedAt?fmtDate(queryCompletedAt.toISOString()):'—';
  const el=document.getElementById('sourceLine');el.hidden=false;el.replaceChildren();
- for(const [label,value] of [[xt(4),date],[xt(5),sources]]){const item=document.createElement('span');const name=document.createElement('span');name.textContent=label+': ';const val=document.createElement('b');val.textContent=value;item.append(name,val);el.append(item)}
+ const entries=[[xt(4),date],[xt(5),sources]];
+ if(lifecycleRecord)entries.push([lang==='zh'?'本浏览器首次观察到当前阶段':lang==='zh-Hant'?'本瀏覽器首次觀察到目前階段':'Current stage first seen in this browser',fmtDate(lifecycleRecord.firstSeen)]);
+ for(const [label,value] of entries){const item=document.createElement('span');const name=document.createElement('span');name.textContent=label+': ';const val=document.createElement('b');val.textContent=value;item.append(name,val);el.append(item)}
 }
 function downloadResult(type){
  if(!currentData)return;
@@ -288,7 +294,7 @@ document.getElementById('favoriteDomain').addEventListener('click',()=>{toggleFa
 document.getElementById('exportTxt').addEventListener('click',()=>downloadResult('txt'));
 document.getElementById('exportJson').addEventListener('click',()=>downloadResult('json'));
 
-window.addEventListener("whois-timezone-change",()=>{if(currentData){renderDates(currentData);updateResultTools()}});
+window.addEventListener("whois-timezone-change",()=>{if(currentData){renderDates(currentData);renderMetrics(currentData);updateResultTools()}});
 
 // V62: quick actions, retaining the original raw export data.
 (()=>{const bar=document.querySelector('.export-bar');if(!bar)return;const refresh=document.createElement('button'),copy=document.createElement('button');for(const b of [refresh,copy]){b.type='button';b.className='export-action';bar.prepend(b)}function labels(){const l=document.documentElement.lang;const zh=l==='zh-CN',tw=l==='zh-TW';refresh.textContent=zh?'重新查询':tw?'重新查詢':'Refresh';copy.textContent=zh?'复制域名':tw?'複製網域':'Copy domain'}labels();new MutationObserver(labels).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});refresh.onclick=()=>load();copy.onclick=()=>copyText(copy,currentData?.domain||domain);})();

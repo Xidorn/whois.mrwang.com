@@ -358,3 +358,6 @@ main{padding-left:20px;padding-right:20px}
 @media(max-width:768px){
  main,.batch-page .batch-shell,.batch-shell,.batch-container{padding-left:14px;padding-right:14px}
 }
+
+.quote-currency { color:inherit; background:transparent; padding:.35rem; border-radius:.35rem; margin-block:.35rem; }
+.quote-holding { display:block; margin-top:.25rem; font-size:.75rem; opacity:.8; }
